@@ -12,13 +12,13 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	desc "github.com/algol-84/auth/pkg/auth_v1"
+	desc "github.com/algol-84/auth/pkg/user_v1"
 )
 
 const grpcPort = 50051
 
 type server struct {
-	desc.UnimplementedAuthV1Server
+	desc.UnimplementedUserV1Server
 }
 
 // Create User
@@ -68,7 +68,7 @@ func main() {
 
 	s := grpc.NewServer()
 	reflection.Register(s)
-	desc.RegisterAuthV1Server(s, &server{})
+	desc.RegisterUserV1Server(s, &server{})
 
 	log.Printf("auth server listening at %v", lis.Addr())
 

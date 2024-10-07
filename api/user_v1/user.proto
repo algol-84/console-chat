@@ -1,14 +1,14 @@
 syntax = "proto3";
 
-package auth_v1;
+package user_v1;
 
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/empty.proto";
 import "google/protobuf/wrappers.proto";
 
-option go_package = "github.com/algol-84/auth/pkg/auth_v1;auth_v1";
+option go_package = "github.com/algol-84/user/pkg/user_v1;user_v1";
 
-service AuthV1 {
+service UserV1 {
   rpc Create(CreateRequest) returns (CreateResponse);
   rpc Get(GetRequest) returns (GetResponse);
   rpc Update(UpdateRequest) returns (google.protobuf.Empty);
@@ -16,8 +16,9 @@ service AuthV1 {
 }
 
 enum Role {
-  ADMIN = 0;
-  USER = 1;
+  UNKNOWN = 0;
+  ADMIN = 1;
+  USER = 2;
 }
 
 message CreateUserInfo {
