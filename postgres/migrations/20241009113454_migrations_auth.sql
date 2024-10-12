@@ -7,7 +7,7 @@ CREATE TABLE chat_user (
     password TEXT NOT NULL,     
     email TEXT,                 
     role user_roles,
-    created_at TIMESTAMP NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT now(),
     updated_at TIMESTAMP
 );
 
