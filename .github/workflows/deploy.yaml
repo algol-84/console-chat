@@ -73,9 +73,9 @@ jobs:
       #     tags: |
       #       pg_auth:latest
 
-        # - name: Build Docker images
-        #   run: |
-        #     docker-compose -f auth_pg/docker-compose.yaml build
+      - name: Build Docker images
+        run: |
+          docker-compose -f auth_pg/docker-compose.yaml build
 
 
 
