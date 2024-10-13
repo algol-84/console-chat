@@ -45,26 +45,37 @@ jobs:
         uses: docker/setup-buildx-action@v2
 
       - name: Install Docker Compose
-        uses: KengoTODA/actions-setup-docker-compose@v1
-        with:
-          version: '2.14.2'  
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker-compose
+
+      # - name: Install Docker Compose
+      #   uses: KengoTODA/actions-setup-docker-compose@v1
+      #   with:
+      #     version: '2.14.2'  
+      
+      # – name: Build Docker images
+      #   run: docker-compose build
 
       # - name: Run Docker Compose
       #   run: |
       #     docker-compose -f ./auth_pg/docker-compose.yaml up -d --build
   
-      - name: Login to Docker Registry
-        run: docker login -u ${{ secrets.REGISTRY_USERNAME }} -p ${{ secrets.REGISTRY_PASSWORD }} $REGISTRY
+      # - name: Login to Docker Registry
+      #   run: docker login -u ${{ secrets.REGISTRY_USERNAME }} -p ${{ secrets.REGISTRY_PASSWORD }} $REGISTRY
 
-      - name: Build and Push Docker Image
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          file: ./auth_pg/docker-compose.yaml
-          push: true
-          tags: |
-            pg_auth:latest
+      # - name: Build and Push Docker Image
+      #   uses: docker/build-push-action@v2
+      #   with:
+      #     context: .
+      #     file: ./auth_pg/docker-compose.yaml
+      #     push: true
+      #     tags: |
+      #       pg_auth:latest
 
+        - name: Build Docker images
+          run: |
+            docker-compose -f auth_pg/docker-compose.yaml build
 
 
 
