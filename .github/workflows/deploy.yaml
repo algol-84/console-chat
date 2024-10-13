@@ -44,9 +44,14 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
-      - name: Run Docker Compose
-        run: |
-          docker-compose -f ./auth_pg/docker-compose.yaml up -d --build
+      - name: Install Docker Compose
+        uses: KengoTODA/actions-setup-docker-compose@v1
+        with:
+          version: '2.14.2'  
+
+      # - name: Run Docker Compose
+      #   run: |
+      #     docker-compose -f ./auth_pg/docker-compose.yaml up -d --build
   
       - name: Login to Docker Registry
         run: docker login -u ${{ secrets.REGISTRY_USERNAME }} -p ${{ secrets.REGISTRY_PASSWORD }} $REGISTRY
