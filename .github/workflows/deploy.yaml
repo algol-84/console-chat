@@ -83,6 +83,10 @@ jobs:
         run: |
           docker-compose -f ./auth_pg/docker-compose.yaml pull  # Скачиваем образ
           docker-compose -f ./auth_pg/docker-compose.yaml up -d  # Запускаем сервисы
+
+      - name: Wait for services to be ready
+        run: |
+          sleep 5  # Дайте время на запуск сервисов (можно настроить по необходимости)
       
       - name: Tag the Docker image
         run: |
