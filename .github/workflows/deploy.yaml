@@ -62,17 +62,20 @@ jobs:
             docker run -d -p 50051:50051 --name $CONTAINER_NAME -t $REGISTRY/$IMAGE_NAME:$TAG_NAME
 
   deploy-pg-image:
-    - name: Login to Docker Registry
-      run: docker login -u ${{ secrets.REGISTRY_USERNAME }} -p ${{ secrets.REGISTRY_PASSWORD }} $REGISTRY
+    runs-on: ubuntu-latest
 
-    - name: Pull existing Docker image
-      run: |
-        docker-compose -f ./auth_pg/docker-compose.yaml pull  # Скачиваем образ
-    
-    - name: Tag the Docker image
-      run: |
-        docker tag postgres:14-alpine3.17 cr.selcloud.ru/algol/postgres:14-alpine3.17  # Тегируем образ
+    steps:
+      - name: Login to Docker Registry
+        run: docker login -u ${{ secrets.REGISTRY_USERNAME }} -p ${{ secrets.REGISTRY_PASSWORD }} $REGISTRY
 
-    - name: Push Docker images
-      run: |
-        docker push cr.selcloud.ru/algol/postgres:14-alpine3.17  # Отправляем образ в реестр
+      - name: Pull existing Docker image
+        run: |
+          docker-compose -f ./auth_pg/docker-compose.yaml pull  # Скачиваем образ
+      
+      - name: Tag the Docker image
+        run: |
+          docker tag postgres:14-alpine3.17 cr.selcloud.ru/algol/postgres:14-alpine3.17  # Тегируем образ
+
+      - name: Push Docker images
+        run: |
+          docker push cr.selcloud.ru/algol/postgres:14-alpine3.17  # Отправляем образ в реестр
