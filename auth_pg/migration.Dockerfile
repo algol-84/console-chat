@@ -14,6 +14,6 @@ ADD migrations/*.sql migrations/
 ADD migration.sh .
 ADD .env .
 
-RUN chmod +x migration_prod.sh
+RUN chmod +x migration.sh
 
 ENTRYPOINT ["bash", "migration.sh"]

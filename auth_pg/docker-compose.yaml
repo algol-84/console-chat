@@ -27,3 +27,11 @@ services:
     # This data is stored outside the Postgres container in a specified folder on the host
     volumes:
       - pg_auth_volume:/var/lib/postgresql/data
+
+  migrator:
+    build:
+      context: .
+      dockerfile: migration.Dockerfile
+    restart: on-failure
+    environment:
+      DB_HOST: pg_auth
