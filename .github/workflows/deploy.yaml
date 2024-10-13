@@ -44,10 +44,10 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
-      - name: Install Docker Compose
-        uses: KengoTODA/actions-setup-docker-compose@v1
-        with:
-          version: '2.14.2'  
+      # - name: Install Docker Compose
+      #   uses: KengoTODA/actions-setup-docker-compose@v1
+      #   with:
+      #     version: '2.14.2'  
       
       # – name: Build Docker images
       #   run: docker-compose build
@@ -68,9 +68,9 @@ jobs:
       #     tags: |
       #       pg_auth:latest
 
-        - name: Build Docker images
-          run: |
-            docker-compose -f auth_pg/docker-compose.yaml build
+        # - name: Build Docker images
+        #   run: |
+        #     docker-compose -f auth_pg/docker-compose.yaml build
 
 
 
