@@ -82,6 +82,7 @@ jobs:
       - name: Pull existing Docker image
         run: |
           docker-compose -f ./auth_pg/docker-compose.yaml pull  # Скачиваем образ
+          docker-compose -f ./auth_pg/docker-compose.yaml up -d  # Запускаем сервисы
       
       - name: Tag the Docker image
         run: |
