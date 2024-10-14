@@ -81,7 +81,10 @@ jobs:
             docker login -u ${{ secrets.REGISTRY_USERNAME }} -p ${{ secrets.REGISTRY_PASSWORD }} $REGISTRY
             
             # Stop running container
-            docker rm $CONTAINER_NAME --force
+            docker stop $CONTAINER_NAME
+            
+            # Remove old container
+            docker rm $CONTAINER_NAME
 
             # Run a new container from a new image
             docker run -d -p 50061:50061 --name $CONTAINER_NAME -t $REGISTRY/$IMAGE_NAME:$TAG_NAME
