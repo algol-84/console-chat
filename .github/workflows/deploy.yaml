@@ -92,7 +92,7 @@ jobs:
 
 
             # Stop running DB container
-            #docker remove $DB_CONTAINER_NAME --force
+            docker rm $DB_CONTAINER_NAME --force
             
             # Run a new DB container
             docker run -d --name $DB_CONTAINER_NAME \
@@ -106,6 +106,8 @@ jobs:
             # Запускаем мигратор
             #docker stop auth_migrator || echo "Контейнер auth_migrator не запущен"
             #docker rm auth_migrator || echo "Контейнер auth_migrator не существует"
+
+            docker rm auth_migrator --force
 
             docker run --network auth-service-network --name auth_migrator \
             --env-file .env \
