@@ -6,3 +6,5 @@
 > docker-compose up -d
 Локально остановить контейнер с пострес можно командой
 > docker-compose down
+
+Адрес локального сервиса localhost:54321

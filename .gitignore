@@ -1,5 +1,4 @@
 .idea
 .vscode
 *.code-workspace
-/auth_server//bin/
-/auth_pg/bin/
+/bin/
