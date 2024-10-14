@@ -96,15 +96,17 @@ jobs:
             
             # Run a new DB container
             docker run -d --name $DB_CONTAINER_NAME \
+            --network auth-service-network \
             -e POSTGRES_DB=auth \
             -e POSTGRES_USER=${{ secrets.PG_USER }}  \
             -e POSTGRES_PASSWORD=${{ secrets.PG_PASSWORD }} \
             -v postgres_data:/var/lib/postgresql/data \
             -p 54322:5432 $DB_IMAGE_NAME
 
-             # Запускаем мигратор
-            docker stop auth_migrator || echo "Контейнер auth_migrator не запущен"
-            docker rm auth_migrator || echo "Контейнер auth_migrator не существует"
+            # Запускаем мигратор
+            #docker stop auth_migrator || echo "Контейнер auth_migrator не запущен"
+            #docker rm auth_migrator || echo "Контейнер auth_migrator не существует"
+
             docker run --network auth-service-network --name auth_migrator \
             --env-file .env \
             -e DB_HOST=$DB_CONTAINER_NAME -t $REGISTRY/auth_migrator:$TAG_NAME || echo "Ошибка запуска контейнера миграций"
