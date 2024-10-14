@@ -31,7 +31,7 @@ jobs:
           echo "PG_PORT=54331" >> .env
           echo "MIGRATION_DIR=./migrations" >> .env
           echo "GRPC_HOST=0.0.0.0" >> .env
-          echo "GRPC_PORT=50051" >> .env
+          echo "GRPC_PORT=50061" >> .env
           echo "PG_DSN=host=$DB_CONTAINER_NAME port=5432 dbname=auth user=${{secrets.PG_USER}} password=${{secrets.PG_PASSWORD}} sslmode=disable" >> .env
 
       - name: Set up Docker Buildx
