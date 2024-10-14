@@ -75,7 +75,6 @@ jobs:
             -e POSTGRES_PASSWORD=${{ secrets.PG_PASSWORD }} \
             -v postgres_data:/var/lib/postgresql/data \
             -p 54322:5432 $DB_IMAGE_NAME
-            fi
 
   # deploy-pg-image:
   #   runs-on: ubuntu-latest
