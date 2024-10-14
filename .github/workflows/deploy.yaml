@@ -85,7 +85,7 @@ jobs:
             docker stop auth_migrator || echo "Контейнер auth_migrator не запущен"
             docker rm auth_migrator || echo "Контейнер auth_migrator не существует"
             docker run --network auth-service-network --name auth_migrator \
-            --env-file auth_pg/.env \
+            --env-file .env \
             -e DB_HOST=$DB_CONTAINER_NAME -t $REGISTRY/auth_migrator:$TAG_NAME || echo "Ошибка запуска контейнера миграций"
 
   # deploy-pg-image:
