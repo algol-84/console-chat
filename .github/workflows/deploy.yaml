@@ -64,6 +64,16 @@ jobs:
           key: ${{ secrets.SSHKEY }}
           envs: IMAGE_NAME,REGISTRY,GITHUB_SHA,CONTAINER_NAME,DB_CONTAINER_NAME,DB_IMAGE_NAME
           script: |
+            # Создаем файл .env
+            echo "PG_DATABASE_NAME=auth" >> .env
+            echo "PG_USER=${{ secrets.PG_USER }}" >> .env
+            echo "PG_PASSWORD=${{ secrets.PG_PASSWORD }}" >> .env
+            echo "PG_PORT=54322" >> .env
+            echo "MIGRATION_DIR=./migrations" >> .env
+
+            # Создаем сеть
+            docker network create auth-service-network || true
+
             # Set up variables
             TAG_NAME=$(echo $GITHUB_SHA | head -c7)
             
