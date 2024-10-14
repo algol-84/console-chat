@@ -63,10 +63,12 @@ jobs:
             # # Run a new container from a new image
             # docker run -d -p 50051:50051 --name $CONTAINER_NAME -t $REGISTRY/$IMAGE_NAME:$TAG_NAME
 
-            # Запуск или создание контейнера Postgres с постоянным хранилищем
-            if [ $(docker ps -q -f name=$DB_CONTAINER_NAME) ]; then
-            echo "DB container is already running..."
-            else
+
+
+            # Stop running DB container
+            docker stop $DB_CONTAINER_NAME
+            
+            # Run a new DB container
             docker run -d --name $DB_CONTAINER_NAME \
             -e POSTGRES_DB=auth \
             -e POSTGRES_USER=${{ secrets.PG_USER }} \
