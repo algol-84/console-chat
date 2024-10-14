@@ -10,7 +10,7 @@ env:
   REGISTRY: "cr.selcloud.ru/algol"
   IMAGE_NAME: "auth-server"
   CONTAINER_NAME: "auth-server-container"
-  DB_CONTAINER_NAME: "auth-db-container"
+  DB_CONTAINER_NAME: "pg-prod"
   DB_IMAGE_NAME: "postgres:14-alpine3.17"
 
 jobs:
