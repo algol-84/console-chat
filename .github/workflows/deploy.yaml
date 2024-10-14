@@ -10,6 +10,8 @@ env:
   REGISTRY: "cr.selcloud.ru/algol"
   IMAGE_NAME: "auth-server"
   CONTAINER_NAME: "auth-server-container"
+  DB_CONTAINER_NAME: "auth-db-container"
+  DB_IMAGE_NAME: "postgres:14"
 
 jobs:
   image-build-and-push:
@@ -27,11 +29,11 @@ jobs:
       - name: Login to Docker Registry
         run: docker login -u ${{ secrets.REGISTRY_USERNAME }} -p ${{ secrets.REGISTRY_PASSWORD }} $REGISTRY
 
-      - name: Build and Push Docker Image
-        run: |
-          TAG_NAME=$(echo $GITHUB_SHA | head -c7)
-          docker buildx create --use
-          docker buildx build --no-cache --push --tag $REGISTRY/$IMAGE_NAME:$TAG_NAME -f auth_server/Dockerfile auth_server/
+      # - name: Build and Push Docker Image
+      #   run: |
+      #     TAG_NAME=$(echo $GITHUB_SHA | head -c7)
+      #     docker buildx create --use
+      #     docker buildx build --no-cache --push --tag $REGISTRY/$IMAGE_NAME:$TAG_NAME -f auth_server/Dockerfile auth_server/
 
   deploy-image:
     runs-on: ubuntu-latest
@@ -52,46 +54,58 @@ jobs:
             # Login into Selectel Registry
             docker login -u ${{ secrets.REGISTRY_USERNAME }} -p ${{ secrets.REGISTRY_PASSWORD }} $REGISTRY
             
-            # Stop running container
-            docker stop $CONTAINER_NAME
+            # # Stop running container
+            # docker stop $CONTAINER_NAME
             
-            # Remove old container
-            docker rm $CONTAINER_NAME
+            # # Remove old container
+            # docker rm $CONTAINER_NAME
             
-            # Run a new container from a new image
-            docker run -d -p 50051:50051 --name $CONTAINER_NAME -t $REGISTRY/$IMAGE_NAME:$TAG_NAME
+            # # Run a new container from a new image
+            # docker run -d -p 50051:50051 --name $CONTAINER_NAME -t $REGISTRY/$IMAGE_NAME:$TAG_NAME
 
-  deploy-pg-image:
-    runs-on: ubuntu-latest
+            # Запуск или создание контейнера Postgres с постоянным хранилищем
+            if [ $(docker ps -q -f name=$DB_CONTAINER_NAME) ]; then
+            echo "DB container is already running..."
+            else
+            docker run -d --name $DB_CONTAINER_NAME \
+            -e POSTGRES_DB=auth \
+            -e POSTGRES_USER=${{ secrets.PG_USER }} \
+            -e POSTGRES_PASSWORD=${{ secrets.PG_PASSWORD }} \
+            -v postgres_data:/var/lib/postgresql/data \
+            -p 54322:5432 $DB_IMAGE_NAME
+            fi
 
-    steps:
-      - name: Checkout add-db
-        uses: actions/checkout@v3
+  # deploy-pg-image:
+  #   runs-on: ubuntu-latest
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+  #   steps:
+  #     - name: Checkout add-db
+  #       uses: actions/checkout@v3
 
-      - name: Install Docker Compose
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y docker-compose
+  #     - name: Set up Docker Buildx
+  #       uses: docker/setup-buildx-action@v2
 
-      - name: Login to Docker Registry
-        run: docker login -u ${{ secrets.REGISTRY_USERNAME }} -p ${{ secrets.REGISTRY_PASSWORD }} $REGISTRY
+  #     - name: Install Docker Compose
+  #       run: |
+  #         sudo apt-get update
+  #         sudo apt-get install -y docker-compose
 
-      - name: Pull existing Docker image
-        run: |
-          docker-compose -f ./auth_pg/docker-compose.yaml pull  # Скачиваем образ
-          docker-compose -f ./auth_pg/docker-compose.yaml up -d  # Запускаем сервисы
+  #     - name: Login to Docker Registry
+  #       run: docker login -u ${{ secrets.REGISTRY_USERNAME }} -p ${{ secrets.REGISTRY_PASSWORD }} $REGISTRY
 
-      - name: Wait for services to be ready
-        run: |
-          sleep 5  # Дайте время на запуск сервисов (можно настроить по необходимости)
+  #     - name: Pull existing Docker image
+  #       run: |
+  #         docker-compose -f ./auth_pg/docker-compose.yaml pull  # Скачиваем образ
+  #         docker-compose -f ./auth_pg/docker-compose.yaml up -d  # Запускаем сервисы
+
+  #     - name: Wait for services to be ready
+  #       run: |
+  #         sleep 5  # Дайте время на запуск сервисов (можно настроить по необходимости)
       
-      - name: Tag the Docker image
-        run: |
-          docker tag postgres:14-alpine3.17 cr.selcloud.ru/algol/postgres:14-alpine3.17  # Тегируем образ
+  #     - name: Tag the Docker image
+  #       run: |
+  #         docker tag postgres:14-alpine3.17 cr.selcloud.ru/algol/postgres:14-alpine3.17  # Тегируем образ
 
-      - name: Push Docker images
-        run: |
-          docker push cr.selcloud.ru/algol/postgres:14-alpine3.17  # Отправляем образ в реестр
+  #     - name: Push Docker images
+  #       run: |
+  #         docker push cr.selcloud.ru/algol/postgres:14-alpine3.17  # Отправляем образ в реестр
