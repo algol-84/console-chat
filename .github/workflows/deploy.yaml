@@ -61,6 +61,11 @@ jobs:
   #         set -o allexport; source prod.env; set +o allexport
 
     steps:
+      - name: Load environment variables from .env file
+        run: |
+          echo "Loading environment variables..."
+          set -o allexport; source prod.env; set +o allexport
+
       - name: Deploy to Selectel Cloud via SSH action
         uses: appleboy/ssh-action@v1.0.0
         with:
@@ -70,7 +75,20 @@ jobs:
           envs: IMAGE_NAME,REGISTRY,GITHUB_SHA,CONTAINER_NAME
           script: |
             # Set up variables
-            TAG_NAME=$(echo $GITHUB_SHA | head -c7)   
+            TAG_NAME=$(echo $GITHUB_SHA | head -c7)  
+
+            # Создаем сеть
+            docker network create auth-service-network || true
+
+            # Login into Selectel Registry
+            docker login -u ${{ secrets.REGISTRY_USERNAME }} -p ${{ secrets.REGISTRY_PASSWORD }} $REGISTRY
+            
+            # Stop running container
+            docker rm $CONTAINER_NAME --force
+
+            # Run a new container from a new image
+            docker run -d -p 50051:50051 --name $CONTAINER_NAME -t $REGISTRY/$IMAGE_NAME:$TAG_NAME
+
 
 
     # steps:
