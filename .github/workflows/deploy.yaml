@@ -11,7 +11,7 @@ env:
   IMAGE_NAME: "auth-server"
   CONTAINER_NAME: "auth-server-container"
   DB_CONTAINER_NAME: "auth-db-container"
-  DB_IMAGE_NAME: "postgres:14"
+  DB_IMAGE_NAME: "postgres:14-alpine3.17"
 
 jobs:
   image-build-and-push:
@@ -66,13 +66,13 @@ jobs:
 
 
             # Stop running DB container
-            docker stop $DB_CONTAINER_NAME
+            #docker stop $DB_CONTAINER_NAME
             
             # Run a new DB container
             docker run -d --name $DB_CONTAINER_NAME \
             -e POSTGRES_DB=auth \
-            -e POSTGRES_USER=${{ secrets.PG_USER }} \
-            -e POSTGRES_PASSWORD=${{ secrets.PG_PASSWORD }} \
+            -e POSTGRES_USER=auth-user \
+            -e POSTGRES_PASSWORD=auth-password \
             -v postgres_data:/var/lib/postgresql/data \
             -p 54322:5432 $DB_IMAGE_NAME
 
