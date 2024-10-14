@@ -115,6 +115,7 @@ func (s *server) Delete(_ context.Context, req *desc.DeleteRequest) (*emptypb.Em
 }
 
 func main() {
+	log.Printf("Run auth-server...")
 	flag.Parse()
 	// Считываем переменные окружения
 	err := config.Load(configPath)

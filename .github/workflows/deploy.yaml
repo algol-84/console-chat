@@ -87,7 +87,7 @@ jobs:
             docker rm $CONTAINER_NAME
 
             # Run a new container from a new image
-            docker run -d -p 50061:50061 --name $CONTAINER_NAME -t $REGISTRY/$IMAGE_NAME:$TAG_NAME
+            docker run -d -p 50061:50061 --network auth-service-network --name $CONTAINER_NAME -t $REGISTRY/$IMAGE_NAME:$TAG_NAME
 
             # Stop running old DB container
             docker rm $DB_CONTAINER_NAME --force
