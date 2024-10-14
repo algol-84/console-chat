@@ -96,7 +96,7 @@ jobs:
             -e POSTGRES_USER=${{ secrets.PG_USER }}  \
             -e POSTGRES_PASSWORD=${{ secrets.PG_PASSWORD }} \
             -v postgres_data:/var/lib/postgresql/data \
-            -p ${{ PG_PORT }}:5432 $DB_IMAGE_NAME
+            -p 54331:5432 $DB_IMAGE_NAME
 
             # Stop old migrator container
             docker rm auth_migrator --force
