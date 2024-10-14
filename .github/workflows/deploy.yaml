@@ -70,6 +70,8 @@ jobs:
             echo "PG_PASSWORD=${{ secrets.PG_PASSWORD }}" >> .env
             echo "PG_PORT=54331" >> .env
             echo "MIGRATION_DIR=./migrations" >> .env
+            echo "GRPC_HOST=45.130.9.109" >> .env
+            echo "GRPC_PORT=50061" >> .env
 
             # Set up variables
             TAG_NAME=$(echo $GITHUB_SHA | head -c7)  

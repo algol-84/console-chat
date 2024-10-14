@@ -20,4 +20,6 @@ WORKDIR /root/
 # Копируем из п.1 собранный бинарник в рабочую директорию 
 COPY --from=builder /github.com/algol/auth_server/source/bin/auth_server .
 
+ADD .env .
+
 CMD ["./auth_server"]      

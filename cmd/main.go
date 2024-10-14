@@ -2,8 +2,7 @@ package main
 
 import (
 	"context"
-	"fmt"
-	//"flag"
+	"flag"
 	"log"
 	"net"
 
@@ -11,18 +10,16 @@ import (
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/protobuf/types/known/emptypb"
 
-	//"github.com/algol-84/auth/internal/config"
+	"github.com/algol-84/auth/internal/config"
 
 	desc "github.com/algol-84/auth/pkg/user_v1"
 )
 
-// var configPath string
+var configPath string
 
-// func init() {
-// 	//flag.StringVar(&configPath, ".", "local.env", "path to config file")
-// 	flag.StringVar(&configPath, "config-path", ".env", "path to config file")
-// 	log.Println("flag string var =", configPath)
-// }
+func init() {
+	flag.StringVar(&configPath, "config-path", ".env", "path to config file")
+}
 
 const grpcPort = 50051
 
@@ -118,26 +115,26 @@ func (s *server) Delete(_ context.Context, req *desc.DeleteRequest) (*emptypb.Em
 func main() {
 	log.Printf("Run auth-server...")
 
-	// flag.Parse()
-	// // Считываем переменные окружения
-	// err := config.Load(configPath)
-	// if err != nil {
-	// 	log.Fatalf("failed to load config: %v %v", err, configPath)
-	// 	return
-	// }
+	flag.Parse()
+	// Считываем переменные окружения
+	err := config.Load(configPath)
+	if err != nil {
+		log.Fatalf("failed to load config: %v %v", err, configPath)
+		return
+	}
 
-	// grpcConfig, err := config.NewGRPCConfig()
-	// if err != nil {
-	// 	log.Fatalf("failed to get grpc config: %v", err)
-	// 	return
-	// }
+	grpcConfig, err := config.NewGRPCConfig()
+	if err != nil {
+		log.Fatalf("failed to get grpc config: %v", err)
+		return
+	}
 
-	// pgConfig, err := config.NewPGConfig()
-	// if err != nil {
-	// 	log.Fatalf("failed to get pg config: %v", err)
-	// }
+	pgConfig, err := config.NewPGConfig()
+	if err != nil {
+		log.Fatalf("failed to get pg config: %v", err)
+	}
 
-	// log.Println("-->>", pgConfig)
+	log.Println("-->>", pgConfig)
 
 	// dbWorker, err := NewDbWorker(dbDSN)
 	// if err != nil {
@@ -145,9 +142,9 @@ func main() {
 	// }
 	// defer dbWorker.pool.Close()
 
-	//lis, err := net.Listen("tcp", grpcConfig.Address())
+	lis, err := net.Listen("tcp", grpcConfig.Address())
 
-	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", grpcPort))
+	//	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", grpcPort))
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
