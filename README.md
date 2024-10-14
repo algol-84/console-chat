@@ -8,3 +8,4 @@
 > docker-compose down
 
 Адрес локального сервиса localhost:54321
+Адрес удаленного сервиса localhost:54331
