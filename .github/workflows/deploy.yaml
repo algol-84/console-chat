@@ -66,7 +66,7 @@ jobs:
 
 
             # Stop running DB container
-            docker stop $DB_CONTAINER_NAME
+            docker remove $DB_CONTAINER_NAME --force
             
             # Run a new DB container
             docker run -d --name $DB_CONTAINER_NAME \
