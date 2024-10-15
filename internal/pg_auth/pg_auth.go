@@ -12,12 +12,14 @@ import (
 
 const table = "chat_user"
 
+// DbWorker содержит все переменные работы с БД auth
 type DbWorker struct {
 	pool *pgxpool.Pool
 	ctx  context.Context
 	User UserInfo
 }
 
+// UserInfo содержит все сведения о юзере из БД auth
 type UserInfo struct {
 	Name      string
 	Password  string
@@ -27,8 +29,8 @@ type UserInfo struct {
 	UpdatedAt time.Time
 }
 
+// NewDbWorker создает пул подключений к БД
 func NewDbWorker(ctx context.Context, connString string) (*DbWorker, error) {
-	// ctx := context.Background()
 	pool, err := pgxpool.Connect(ctx, connString)
 	if err != nil {
 		return nil, err
@@ -37,11 +39,12 @@ func NewDbWorker(ctx context.Context, connString string) (*DbWorker, error) {
 	return &DbWorker{pool: pool, ctx: ctx}, nil
 }
 
+// Close закрывает пул соединений с БД
 func (db *DbWorker) Close() {
 	db.pool.Close()
 }
 
-// Function creates the user in the database
+// CreateUser создает нового юзера в БД
 func (db *DbWorker) CreateUser() (userID int64, err error) {
 	// Делаем запрос на вставку записи в таблицу note
 	builderQuery := sq.Insert(table).
@@ -66,7 +69,7 @@ func (db *DbWorker) CreateUser() (userID int64, err error) {
 	return userID, nil
 }
 
-// Function selects one user by ID from database
+// GetUser возвращает сведения о юзере по ID
 func (db *DbWorker) GetUser(userID int64) (err error) {
 	builderQuery := sq.Select("name", "email", "role", "created_at", "updated_at").
 		From(table).
@@ -95,7 +98,7 @@ func (db *DbWorker) GetUser(userID int64) (err error) {
 	return nil
 }
 
-// Function updates the user by ID in the database
+// UpdateUser обновляет данные юзера в БД
 func (db *DbWorker) UpdateUser(userID int64) (err error) {
 	builderQuery := sq.Update(table).
 		PlaceholderFormat(sq.Dollar).
@@ -121,7 +124,7 @@ func (db *DbWorker) UpdateUser(userID int64) (err error) {
 	return nil
 }
 
-// Function removes the user by ID from the database
+// DeleteUser удаляет юзера в БД
 func (db *DbWorker) DeleteUser(userID int64) (err error) {
 	builderQuery := sq.Delete(table).
 		PlaceholderFormat(sq.Dollar).
