@@ -51,8 +51,10 @@ func (s *server) Create(_ context.Context, req *desc.CreateRequest) (*desc.Creat
 		log.Println("DB error:", err)
 	}
 
+	log.Println("userId =", userID)
+
 	return &desc.CreateResponse{
-		Id: userID,
+		Id: 0,
 	}, nil
 }
 
