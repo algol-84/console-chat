@@ -55,12 +55,14 @@ func (db *DbWorker) CreateUser() (userID int64, err error) {
 
 	query, args, err := builderQuery.ToSql()
 	if err != nil {
-		log.Fatalf("failed to build query: %v", err)
+		log.Printf("failed to build query: %v", err)
+		return 0, err
 	}
 
 	err = db.pool.QueryRow(db.ctx, query, args...).Scan(&userID)
 	if err != nil {
-		log.Fatalf("failed to insert user: %v", err)
+		log.Printf("failed to insert user: %v", err)
+		return 0, err
 	}
 
 	log.Printf("inserted user with id: %d", userID)
