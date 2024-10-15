@@ -110,7 +110,7 @@ jobs:
       - name: Build and Push Migrator Image
         run: |
           TAG_NAME=$(echo $GITHUB_SHA | head -c7)
-          docker buildx build --no-cache --push --tag $REGISTRY/auth_migrator:$TAG_NAME -f migration_prod.Dockerfile .
+          docker buildx build --no-cache --push --tag $REGISTRY/auth-migrator:$TAG_NAME -f migration_prod.Dockerfile .
 
   deploy-image:
     runs-on: ubuntu-latest
@@ -165,12 +165,12 @@ jobs:
             -p 54331:5432 $DB_IMAGE_NAME
 
             # Stop old migrator container
-            docker rm auth_migrator --force
+            docker rm auth-migrator --force
             
             # Launch new migrator container
-            docker run --network auth-service-network --name auth_migrator \
+            docker run --network auth-service-network --name auth-migrator \
             --env-file .env \
-            -e DB_HOST=$DB_CONTAINER_NAME -t $REGISTRY/auth_migrator:$TAG_NAME
+            -e DB_HOST=$DB_CONTAINER_NAME -t $REGISTRY/auth-migrator:$TAG_NAME
 
 
 
