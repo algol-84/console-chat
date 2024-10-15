@@ -140,7 +140,7 @@ func main() {
 		log.Fatalf("failed to get pg config: %v", err)
 	}
 
-	//log.Println("-->>", pgConfig)
+	log.Println("-->>", pgConfig)
 
 	ctx := context.Background()
 	dbWorker, err := pg.NewDbWorker(ctx, pgConfig.DSN())
