@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [ main, master, add-db ]
+    branches: [ main, master ]
   pull_request:
     branches: [ main, master ]
 
@@ -80,8 +80,8 @@ jobs:
 
     steps:
       # Встаем на нужную ветку в гитхабе
-      #- name: Checkout master
-      - name: Checkout add-db
+      - name: Checkout master
+      #- name: Checkout add-db
         uses: actions/checkout@v3
 
       - name: Create .env file for CI
@@ -171,59 +171,3 @@ jobs:
             docker run --network auth-service-network --name auth-migrator \
             --env-file .env \
             -e DB_HOST=$DB_CONTAINER_NAME -t $REGISTRY/auth-migrator:$TAG_NAME
-
-
-
-    # steps:
-    #   - name: Deploy to Selectel Cloud via SSH action
-    #     uses: appleboy/ssh-action@v1.0.0
-    #     with:
-    #       host: ${{ secrets.SERVER_HOST }}
-    #       username: ${{ secrets.SSH_USERNAME }}
-    #       key: ${{ secrets.SSHKEY }}
-    #       envs: IMAGE_NAME,REGISTRY,GITHUB_SHA,CONTAINER_NAME,DB_CONTAINER_NAME,DB_IMAGE_NAME
-    #       script: |
-  #           # Создаем файл .env
-  #           echo "PG_DATABASE_NAME=auth" >> .env
-  #           echo "PG_USER=${{ secrets.PG_USER }}" >> .env
-  #           echo "PG_PASSWORD=${{ secrets.PG_PASSWORD }}" >> .env
-  #           echo "PG_PORT=54322" >> .env
-  #           echo "MIGRATION_DIR=./migrations" >> .env
-
-            # # Создаем сеть
-            # docker network create auth-service-network || true
-
-  #           # Set up variables
-  #           TAG_NAME=$(echo $GITHUB_SHA | head -c7)
-            
-  #           # Login into Selectel Registry
-  #           docker login -u ${{ secrets.REGISTRY_USERNAME }} -p ${{ secrets.REGISTRY_PASSWORD }} $REGISTRY
-            
-  #           # Stop running container
-  #           docker stop $CONTAINER_NAME
-            
-  #           # Remove old container
-  #           docker rm $CONTAINER_NAME
-            
-  #           # Run a new container from a new image
-  #           docker run -d -p 50051:50051 --name $CONTAINER_NAME -t $REGISTRY/$IMAGE_NAME:$TAG_NAME
-
-  #           # Stop running old DB container
-  #           docker rm $DB_CONTAINER_NAME --force
-            
-  #           # Run a new DB container
-  #           docker run -d --name $DB_CONTAINER_NAME \
-  #           --network auth-service-network \
-  #           -e POSTGRES_DB=auth \
-  #           -e POSTGRES_USER=${{ secrets.PG_USER }}  \
-  #           -e POSTGRES_PASSWORD=${{ secrets.PG_PASSWORD }} \
-  #           -v postgres_data:/var/lib/postgresql/data \
-  #           -p 54322:5432 $DB_IMAGE_NAME
-
-  #           # Stop old migrator container
-  #           docker rm auth_migrator --force
-            
-  #           # Launch new migrator container
-  #           docker run --network auth-service-network --name auth_migrator \
-  #           --env-file .env \
-  #           -e DB_HOST=$DB_CONTAINER_NAME -t $REGISTRY/auth_migrator:$TAG_NAME
