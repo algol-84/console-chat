@@ -3,7 +3,7 @@ package pg_auth
 import (
 	"context"
 	"database/sql"
-	"errors"
+	"fmt"
 	"time"
 
 	sq "github.com/Masterminds/squirrel"
@@ -44,11 +44,12 @@ type User struct {
 }
 
 // Connect создает пул подключений к БД Auth
-func Connect(ctx context.Context, connString string) (err error) {
-	pool, err = pgxpool.Connect(ctx, connString)
+func Connect(ctx context.Context, connString string) error {
+	pgxpool, err := pgxpool.Connect(ctx, connString)
 	if err != nil {
 		return err
 	}
+	pool = pgxpool
 	return nil
 }
 
@@ -60,7 +61,8 @@ func Close() {
 // CreateUser создает нового юзера в БД
 // Данные юзера передаются указателем на структуру
 // Функция возвращает присвоенный в БД ID юзера или ошибку записи
-func CreateUser(ctx context.Context, user *User) (userID int64, err error) {
+func CreateUser(ctx context.Context, user *User) (int64, error) {
+	var userID int64
 	// Собрать запрос на вставку записи в таблицу
 	builderQuery := sq.Insert(table).
 		PlaceholderFormat(sq.Dollar).
@@ -82,13 +84,7 @@ func CreateUser(ctx context.Context, user *User) (userID int64, err error) {
 }
 
 // GetUser возвращает сведения о юзере по ID
-func GetUser(ctx context.Context, userID int64) (user User, err error) {
-	// Если юзера с таким ID не существует в базе, вернуть ошибку
-	err = findUserByID(ctx, userID)
-	if err != nil {
-		return User{}, err
-	}
-
+func GetUser(ctx context.Context, userID int64) (User, error) {
 	builderQuery := sq.Select(fieldName, fieldEmail, fieldRole, fieldCreatedAt, fieldUpdatedAt).
 		From(table).
 		PlaceholderFormat(sq.Dollar).
@@ -100,6 +96,7 @@ func GetUser(ctx context.Context, userID int64) (user User, err error) {
 	}
 
 	var updatedAt sql.NullTime
+	var user User
 	err = pool.QueryRow(ctx, query, args...).Scan(&user.Name, &user.Email, &user.Role, &user.CreatedAt, &updatedAt)
 	if err != nil {
 		return User{}, err
@@ -111,33 +108,21 @@ func GetUser(ctx context.Context, userID int64) (user User, err error) {
 }
 
 // UpdateUser обновляет данные юзера в БД
-func UpdateUser(ctx context.Context, userID int64, name stringValue, email stringValue, role desc.Role) (err error) {
-	// Если юзера с таким ID не существует в базе, вернуть ошибку
-	err = findUserByID(ctx, userID)
-	if err != nil {
-		return err
-	}
-
+func UpdateUser(ctx context.Context, userID int64, name stringValue, email stringValue, role desc.Role) error {
 	builderQuery := sq.Update(table).
 		PlaceholderFormat(sq.Dollar).
 		Where(sq.Eq{fieldID: userID})
 
-	isValid := false
 	if name != nil {
 		builderQuery = builderQuery.Set(fieldName, name.Value)
-		isValid = true
 	}
 	if email != nil {
 		builderQuery = builderQuery.Set(fieldEmail, email.Value)
-		isValid = true
 	}
 	if role != desc.Role_UNKNOWN {
 		builderQuery = builderQuery.Set(fieldRole, role.String())
-		isValid = true
 	}
-	if !isValid {
-		return errors.New("there are no fields to update")
-	}
+
 	builderQuery = builderQuery.Set(fieldUpdatedAt, time.Now())
 
 	query, args, err := builderQuery.ToSql()
@@ -145,22 +130,21 @@ func UpdateUser(ctx context.Context, userID int64, name stringValue, email strin
 		return err
 	}
 
-	_, err = pool.Exec(ctx, query, args...)
+	res, err := pool.Exec(ctx, query, args...)
 	if err != nil {
 		return err
+	}
+
+	rowsAffected := res.RowsAffected()
+	if rowsAffected == 0 {
+		return fmt.Errorf("user with ID=%d not found", userID)
 	}
 
 	return nil
 }
 
 // DeleteUser удаляет юзера в БД
-func DeleteUser(ctx context.Context, userID int64) (err error) {
-	// Если юзера с таким ID не существует в базе, вернуть ошибку
-	err = findUserByID(ctx, userID)
-	if err != nil {
-		return err
-	}
-
+func DeleteUser(ctx context.Context, userID int64) error {
 	builderQuery := sq.Delete(table).
 		PlaceholderFormat(sq.Dollar).
 		Where(sq.Eq{fieldID: userID})
@@ -170,30 +154,14 @@ func DeleteUser(ctx context.Context, userID int64) (err error) {
 		return err
 	}
 
-	_, err = pool.Exec(ctx, query, args...)
+	res, err := pool.Exec(ctx, query, args...)
 	if err != nil {
 		return err
 	}
 
-	return nil
-}
-
-// findUserByID возвращает err, если юзера с указанным ID не существует в базе и nil в противном случае
-func findUserByID(ctx context.Context, userID int64) error {
-	// Создаем запрос с помощью Squirrel
-	query, args, err := sq.Select(fieldID).
-		PlaceholderFormat(sq.Dollar).
-		From(table).
-		Where(sq.Eq{fieldID: userID}).
-		ToSql()
-	if err != nil {
-		return err
-	}
-
-	var ret int64
-	err = pool.QueryRow(ctx, query, args...).Scan(&ret)
-	if err != nil {
-		return err
+	rowsAffected := res.RowsAffected()
+	if rowsAffected == 0 {
+		return fmt.Errorf("user with ID=%d not found", userID)
 	}
 
 	return nil

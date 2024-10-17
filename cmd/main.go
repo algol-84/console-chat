@@ -69,8 +69,6 @@ func convertStringToRole(roleStr string) desc.Role {
 
 // Get User info by ID
 func (s *server) Get(ctx context.Context, req *desc.GetRequest) (*desc.GetResponse, error) {
-	log.Printf("Request to get user %d", req.Id)
-
 	user, err := pg.GetUser(ctx, req.Id)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "the request for user data in the DB returned with error: %s", err)
@@ -88,7 +86,9 @@ func (s *server) Get(ctx context.Context, req *desc.GetRequest) (*desc.GetRespon
 
 // Update User info
 func (s *server) Update(ctx context.Context, req *desc.UpdateRequest) (*emptypb.Empty, error) {
-	log.Printf("Request to update user %d received", req.Id)
+	if req.Name == nil && req.Email == nil && req.Role == desc.Role_UNKNOWN {
+		return nil, status.Errorf(codes.InvalidArgument, "there are no fields to update")
+	}
 
 	err := pg.UpdateUser(ctx, req.Id, req.Name, req.Email, req.Role)
 	if err != nil {
@@ -100,8 +100,6 @@ func (s *server) Update(ctx context.Context, req *desc.UpdateRequest) (*emptypb.
 
 // Delete User by ID
 func (s *server) Delete(ctx context.Context, req *desc.DeleteRequest) (*emptypb.Empty, error) {
-	log.Printf("Request to delete user %d received", req.Id)
-
 	err := pg.DeleteUser(ctx, req.Id)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "removing user from the DB returned with an error: %s", err)
