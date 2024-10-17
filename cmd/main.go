@@ -5,10 +5,11 @@ import (
 	"flag"
 	"log"
 	"net"
-	"time"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/reflection"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
@@ -26,29 +27,32 @@ func init() {
 
 type server struct {
 	desc.UnimplementedUserV1Server
-	dbWorker *pg.DbWorker
 }
 
 // Create User
-func (s *server) Create(_ context.Context, req *desc.CreateRequest) (*desc.CreateResponse, error) {
-	log.Printf("Request to create user received: %+v", req.Info)
+func (s *server) Create(ctx context.Context, req *desc.CreateRequest) (*desc.CreateResponse, error) {
+	// Проверить корректность всех полей запроса
+	if req.Password != req.PasswordConfirm {
+		return nil, status.Errorf(codes.InvalidArgument, "fields \"password\" and \"password_confirm\" don't match")
+	}
 
-	// TODO Check user exists in the database
+	if req.Role != desc.Role_ADMIN && req.Role != desc.Role_USER {
+		return nil, status.Errorf(codes.InvalidArgument, "user role must be ADMIN or USER")
+	}
 
-	// if req.Info.Password != req.Info.PasswordConfirm {
-	// 	// TODO return response with error
-	// }
+	if req.Name == "" {
+		return nil, status.Errorf(codes.InvalidArgument, "user name must be not empty")
+	}
 
-	s.dbWorker.User.Name = req.Info.Name
-	s.dbWorker.User.Password = req.Info.Password
-	s.dbWorker.User.Email = req.Info.Email
-	s.dbWorker.User.Role = req.Info.Role.String()
-	s.dbWorker.User.CreatedAt = time.Now()
+	var user pg.User
+	user.Name = req.Name
+	user.Email = req.Email
+	user.Password = req.Password
+	user.Role = req.Role.String()
 
-	userID, err := s.dbWorker.CreateUser()
-
+	userID, err := pg.CreateUser(ctx, &user)
 	if err != nil {
-		log.Println("DB error:", err)
+		return nil, status.Errorf(codes.Internal, "user creation in DB returned with error: %s", err)
 	}
 
 	return &desc.CreateResponse{
@@ -56,63 +60,51 @@ func (s *server) Create(_ context.Context, req *desc.CreateRequest) (*desc.Creat
 	}, nil
 }
 
+func convertStringToRole(roleStr string) desc.Role {
+	if roleValue, exists := desc.Role_value[roleStr]; exists {
+		return desc.Role(roleValue)
+	}
+	return desc.Role_UNKNOWN
+}
+
 // Get User info by ID
-func (s *server) Get(_ context.Context, req *desc.GetRequest) (*desc.GetResponse, error) {
+func (s *server) Get(ctx context.Context, req *desc.GetRequest) (*desc.GetResponse, error) {
 	log.Printf("Request to get user %d", req.Id)
 
-	err := s.dbWorker.GetUser(req.Id)
+	user, err := pg.GetUser(ctx, req.Id)
 	if err != nil {
-		log.Println(err)
-	}
-	// Convert from string value to enum Role
-	var role desc.Role
-	if roleValue, exists := desc.Role_value[s.dbWorker.User.Role]; exists {
-		role = desc.Role(roleValue)
-	} else {
-		role = desc.Role_UNKNOWN
+		return nil, status.Errorf(codes.Internal, "the request for user data in the DB returned with error: %s", err)
 	}
 
 	return &desc.GetResponse{
-		User: &desc.GetUser{
-			Id:        req.Id,
-			Name:      s.dbWorker.User.Name,
-			Email:     s.dbWorker.User.Email,
-			Role:      role,
-			CreatedAt: timestamppb.New(s.dbWorker.User.CreatedAt),
-			UpdatedAt: timestamppb.New(s.dbWorker.User.UpdatedAt),
-		},
+		Id:        req.Id,
+		Name:      user.Name,
+		Email:     user.Email,
+		Role:      convertStringToRole(user.Role),
+		CreatedAt: timestamppb.New(user.CreatedAt),
+		UpdatedAt: timestamppb.New(user.UpdatedAt),
 	}, nil
 }
 
 // Update User info
-func (s *server) Update(_ context.Context, req *desc.UpdateRequest) (*emptypb.Empty, error) {
+func (s *server) Update(ctx context.Context, req *desc.UpdateRequest) (*emptypb.Empty, error) {
 	log.Printf("Request to update user %d received", req.Id)
 
-	if req.Info.Name == nil || req.Info.Email == nil {
-		// TODO return error response
-		return &emptypb.Empty{}, nil
-	}
-
-	s.dbWorker.User.Name = req.Info.Name.Value
-	s.dbWorker.User.Email = req.Info.Email.Value
-	s.dbWorker.User.Role = req.Info.Role.String()
-	err := s.dbWorker.UpdateUser(req.Id)
+	err := pg.UpdateUser(ctx, req.Id, req.Name, req.Email, req.Role)
 	if err != nil {
-		log.Println(err)
+		return nil, status.Errorf(codes.Internal, "updating user in the DB returned with an error: %s", err)
 	}
 
 	return &emptypb.Empty{}, nil
 }
 
 // Delete User by ID
-func (s *server) Delete(_ context.Context, req *desc.DeleteRequest) (*emptypb.Empty, error) {
+func (s *server) Delete(ctx context.Context, req *desc.DeleteRequest) (*emptypb.Empty, error) {
 	log.Printf("Request to delete user %d received", req.Id)
 
-	// TODO Error handling if user not exists in the database
-
-	err := s.dbWorker.DeleteUser(req.Id)
+	err := pg.DeleteUser(ctx, req.Id)
 	if err != nil {
-		log.Println(err)
+		return nil, status.Errorf(codes.Internal, "removing user from the DB returned with an error: %s", err)
 	}
 
 	return &emptypb.Empty{}, nil
@@ -140,21 +132,19 @@ func main() {
 		log.Fatalf("failed to get pg config: %v", err)
 	}
 
-	log.Println("-->>", pgConfig)
-
 	ctx := context.Background()
-	dbWorker, err := pg.NewDbWorker(ctx, pgConfig.DSN())
+	err = pg.Connect(ctx, pgConfig.DSN())
 	if err != nil {
 		log.Fatalf("Failed to create DbWorker: %v", err)
 	}
-	defer dbWorker.Close()
+	defer pg.Close()
 
 	lis, err := net.Listen("tcp", grpcConfig.Address())
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
-	userServer := &server{dbWorker: dbWorker}
+	userServer := &server{}
 	s := grpc.NewServer()
 	reflection.Register(s)
 	desc.RegisterUserV1Server(s, userServer)
