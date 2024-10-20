@@ -1,0 +1,21 @@
+//
+// Файл содержит структуры моделей представлений таблиц БД
+// Это внутренний тип данных внутри репо слоя
+
+package model
+
+import (
+	"database/sql"
+	"time"
+)
+
+// С
+type User struct {
+	ID        int64        `db:"id"`
+	Name      string       `db:"name"`
+	Password  string       `db:"password"`
+	Email     string       `db:"email"`
+	Role      string       `db:"role"`
+	CreatedAt time.Time    `db:"created_at"`
+	UpdatedAt sql.NullTime `db:"updated_at"`
+}

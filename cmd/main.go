@@ -11,10 +11,12 @@ import (
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
-	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/algol-84/auth/internal/config"
-	pg "github.com/algol-84/auth/internal/pg_auth"
+	"github.com/algol-84/auth/internal/repository"
+	"github.com/jackc/pgx/v4/pgxpool"
+
+	"github.com/algol-84/auth/internal/repository/auth"
 
 	desc "github.com/algol-84/auth/pkg/user_v1"
 )
@@ -27,30 +29,12 @@ func init() {
 
 type server struct {
 	desc.UnimplementedUserV1Server
+	authRepository repository.AuthRepository
 }
 
-// Create User
+// Create обрабатывает GRPC запросы на создание нового юзера
 func (s *server) Create(ctx context.Context, req *desc.CreateRequest) (*desc.CreateResponse, error) {
-	// Проверить корректность всех полей запроса
-	if req.Password != req.PasswordConfirm {
-		return nil, status.Errorf(codes.InvalidArgument, "fields \"password\" and \"password_confirm\" don't match")
-	}
-
-	if req.Role != desc.Role_ADMIN && req.Role != desc.Role_USER {
-		return nil, status.Errorf(codes.InvalidArgument, "user role must be ADMIN or USER")
-	}
-
-	if req.Name == "" {
-		return nil, status.Errorf(codes.InvalidArgument, "user name must be not empty")
-	}
-
-	var user pg.User
-	user.Name = req.Name
-	user.Email = req.Email
-	user.Password = req.Password
-	user.Role = req.Role.String()
-
-	userID, err := pg.CreateUser(ctx, &user)
+	userID, err := s.authRepository.Create(ctx, req.User)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "user creation in DB returned with error: %s", err)
 	}
@@ -60,37 +44,21 @@ func (s *server) Create(ctx context.Context, req *desc.CreateRequest) (*desc.Cre
 	}, nil
 }
 
-func convertStringToRole(roleStr string) desc.Role {
-	if roleValue, exists := desc.Role_value[roleStr]; exists {
-		return desc.Role(roleValue)
-	}
-	return desc.Role_UNKNOWN
-}
-
-// Get User info by ID
+// Get обрабатывает GRPC запросы на получение данных пользователя
 func (s *server) Get(ctx context.Context, req *desc.GetRequest) (*desc.GetResponse, error) {
-	user, err := pg.GetUser(ctx, req.Id)
+	userInfo, err := s.authRepository.Get(ctx, req.Id)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "the request for user data in the DB returned with error: %s", err)
 	}
 
 	return &desc.GetResponse{
-		Id:        req.Id,
-		Name:      user.Name,
-		Email:     user.Email,
-		Role:      convertStringToRole(user.Role),
-		CreatedAt: timestamppb.New(user.CreatedAt),
-		UpdatedAt: timestamppb.New(user.UpdatedAt),
+		UserInfo: userInfo,
 	}, nil
 }
 
-// Update User info
+// Update обрабатывает GRPC запросы на обновление данных пользователя
 func (s *server) Update(ctx context.Context, req *desc.UpdateRequest) (*emptypb.Empty, error) {
-	if req.Name == nil && req.Email == nil && req.Role == desc.Role_UNKNOWN {
-		return nil, status.Errorf(codes.InvalidArgument, "there are no fields to update")
-	}
-
-	err := pg.UpdateUser(ctx, req.Id, req.Name, req.Email, req.Role)
+	err := s.authRepository.Update(ctx, req.UserUpdate)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "updating user in the DB returned with an error: %s", err)
 	}
@@ -98,9 +66,9 @@ func (s *server) Update(ctx context.Context, req *desc.UpdateRequest) (*emptypb.
 	return &emptypb.Empty{}, nil
 }
 
-// Delete User by ID
+// Delete обрабатывает GRPC запросы на удаление пользователя
 func (s *server) Delete(ctx context.Context, req *desc.DeleteRequest) (*emptypb.Empty, error) {
-	err := pg.DeleteUser(ctx, req.Id)
+	err := s.authRepository.Delete(ctx, req.Id)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "removing user from the DB returned with an error: %s", err)
 	}
@@ -109,8 +77,6 @@ func (s *server) Delete(ctx context.Context, req *desc.DeleteRequest) (*emptypb.
 }
 
 func main() {
-	log.Printf("Run auth-server...")
-
 	flag.Parse()
 	// Считываем переменные окружения
 	err := config.Load(configPath)
@@ -131,18 +97,21 @@ func main() {
 	}
 
 	ctx := context.Background()
-	err = pg.Connect(ctx, pgConfig.DSN())
+
+	pool, err := pgxpool.Connect(ctx, pgConfig.DSN())
 	if err != nil {
-		log.Fatalf("Failed to create DbWorker: %v", err)
+		log.Fatalf("failed to connect to DB: %v", err)
 	}
-	defer pg.Close()
+	defer pool.Close()
 
 	lis, err := net.Listen("tcp", grpcConfig.Address())
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
-	userServer := &server{}
+	authRepo := auth.NewRepository(pool)
+
+	userServer := &server{authRepository: authRepo}
 	s := grpc.NewServer()
 	reflection.Register(s)
 	desc.RegisterUserV1Server(s, userServer)
