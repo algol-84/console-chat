@@ -21,23 +21,6 @@ enum Role {
   USER = 2;
 }
 
-message CreateUserInfo {
-  string name = 1;
-  string email = 2;
-  string password = 3;
-  string password_confirm = 4;
-  Role role = 5;
-}
-
-message GetUser {
-  int64 id = 1;
-  string name = 2;
-  string email = 3;
-  Role role = 4;
-  google.protobuf.Timestamp created_at = 5;
-  google.protobuf.Timestamp updated_at = 6;
-}
-
 message UpdateUserInfo {
   google.protobuf.StringValue name = 1;
   google.protobuf.StringValue email = 2;  
@@ -45,7 +28,11 @@ message UpdateUserInfo {
 }
 
 message CreateRequest {
-  CreateUserInfo info = 1;
+  string name = 1;              // Уникальное для аутентификации в чате
+  string email = 2;
+  string password = 3;           
+  string password_confirm = 4;   
+  Role role = 5;                 
 }
 
 message CreateResponse {
@@ -57,12 +44,19 @@ message GetRequest {
 }
 
 message GetResponse {
-  GetUser user = 1;
+  int64 id = 1;
+  string name = 2;
+  string email = 3;
+  Role role = 4;
+  google.protobuf.Timestamp created_at = 5;
+  google.protobuf.Timestamp updated_at = 6;
 }
 
 message UpdateRequest {
   int64 id = 1;
-  UpdateUserInfo info = 2;
+  google.protobuf.StringValue name = 2;
+  google.protobuf.StringValue email = 3;  
+  Role role = 4;
 }
 
 message DeleteRequest {
