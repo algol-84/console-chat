@@ -168,6 +168,6 @@ jobs:
             docker rm chat-migrator --force
             
             # Launch new migrator container
-            docker run --network chat-service-network --name chat-migrator \
-            --env-file .env \
-            -e DB_HOST=$DB_CONTAINER_NAME -t $REGISTRY/chat-migrator:$TAG_NAME
+            # docker run --network chat-service-network --name chat-migrator \
+            # --env-file .env \
+            # -e DB_HOST=$DB_CONTAINER_NAME -t $REGISTRY/chat-migrator:$TAG_NAME
