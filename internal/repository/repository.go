@@ -10,12 +10,13 @@ package repository
 import (
 	"context"
 
-	desc "github.com/algol-84/auth/pkg/user_v1"
+	model "github.com/algol-84/auth/internal/model"
 )
 
+// AuthRepository интерфейс реализует репо слой
 type AuthRepository interface {
-	Create(ctx context.Context, user *desc.User) (int64, error)
-	Get(ctx context.Context, id int64) (*desc.UserInfo, error)
-	Update(ctx context.Context, user *desc.UserUpdate) error
+	Create(ctx context.Context, user *model.User) (int64, error)
+	Get(ctx context.Context, id int64) (*model.User, error)
+	Update(ctx context.Context, user *model.UserUpdate) error
 	Delete(ctx context.Context, id int64) error
 }

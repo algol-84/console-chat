@@ -13,7 +13,8 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	"github.com/algol-84/auth/internal/config"
-	"github.com/algol-84/auth/internal/repository"
+	"github.com/algol-84/auth/internal/converter"
+	"github.com/algol-84/auth/internal/service"
 	"github.com/jackc/pgx/v4/pgxpool"
 
 	"github.com/algol-84/auth/internal/repository/auth"
@@ -29,12 +30,13 @@ func init() {
 
 type server struct {
 	desc.UnimplementedUserV1Server
-	authRepository repository.AuthRepository
+	//authRepository repository.AuthRepository
+	authService service.AuthService
 }
 
 // Create обрабатывает GRPC запросы на создание нового юзера
 func (s *server) Create(ctx context.Context, req *desc.CreateRequest) (*desc.CreateResponse, error) {
-	userID, err := s.authRepository.Create(ctx, req.User)
+	userID, err := s.authService.Create(ctx, converter.FromUserToService(req.User))
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "user creation in DB returned with error: %s", err)
 	}
@@ -46,19 +48,19 @@ func (s *server) Create(ctx context.Context, req *desc.CreateRequest) (*desc.Cre
 
 // Get обрабатывает GRPC запросы на получение данных пользователя
 func (s *server) Get(ctx context.Context, req *desc.GetRequest) (*desc.GetResponse, error) {
-	userInfo, err := s.authRepository.Get(ctx, req.Id)
+	user, err := s.authService.Get(ctx, req.Id)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "the request for user data in the DB returned with error: %s", err)
 	}
 
 	return &desc.GetResponse{
-		UserInfo: userInfo,
+		UserInfo: converter.ToUserInfoFromService(user),
 	}, nil
 }
 
 // Update обрабатывает GRPC запросы на обновление данных пользователя
 func (s *server) Update(ctx context.Context, req *desc.UpdateRequest) (*emptypb.Empty, error) {
-	err := s.authRepository.Update(ctx, req.UserUpdate)
+	err := s.authService.Update(ctx, converter.ToUserUpdateFromDesc(req.UserUpdate))
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "updating user in the DB returned with an error: %s", err)
 	}
@@ -68,7 +70,7 @@ func (s *server) Update(ctx context.Context, req *desc.UpdateRequest) (*emptypb.
 
 // Delete обрабатывает GRPC запросы на удаление пользователя
 func (s *server) Delete(ctx context.Context, req *desc.DeleteRequest) (*emptypb.Empty, error) {
-	err := s.authRepository.Delete(ctx, req.Id)
+	err := s.authService.Delete(ctx, req.Id)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "removing user from the DB returned with an error: %s", err)
 	}
@@ -110,8 +112,9 @@ func main() {
 	}
 
 	authRepo := auth.NewRepository(pool)
+	authService := service.AuthService(authRepo)
 
-	userServer := &server{authRepository: authRepo}
+	userServer := &server{authService: authService}
 	s := grpc.NewServer()
 	reflection.Register(s)
 	desc.RegisterUserV1Server(s, userServer)

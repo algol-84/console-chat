@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-// С
+// User представляет собой модель репо слоя
 type User struct {
 	ID        int64        `db:"id"`
 	Name      string       `db:"name"`
