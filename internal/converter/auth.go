@@ -2,8 +2,6 @@
 package converter
 
 import (
-	"log"
-
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/algol-84/auth/internal/model"
@@ -40,8 +38,6 @@ func ToUserInfoFromService(user *model.User) *desc.UserInfo {
 
 // ToUserUpdateFromDesc конвертирует тип protobuf UserUpdate в модель UserUpdate
 func ToUserUpdateFromDesc(user *desc.UserUpdate) *model.UserUpdate {
-
-	log.Println(user)
 	var userUpdate model.UserUpdate
 	if user.Name != nil {
 		userUpdate.Name.Value = user.Name.Value
