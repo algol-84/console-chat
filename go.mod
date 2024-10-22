@@ -4,16 +4,18 @@ go 1.23
 
 require (
 	github.com/Masterminds/squirrel v1.5.4
-	github.com/golang/protobuf v1.5.4
+	github.com/georgysavva/scany v1.2.2
+	github.com/jackc/pgconn v1.14.3
 	github.com/jackc/pgx/v4 v4.18.3
 	github.com/joho/godotenv v1.5.1
+	github.com/olezhek28/microservices_course/week_3 v0.0.0-20240730180403-7726e2b3b758
+	github.com/pkg/errors v0.9.1
 	google.golang.org/grpc v1.67.1
 	google.golang.org/protobuf v1.34.2
 )
 
 require (
 	github.com/jackc/chunkreader/v2 v2.0.1 // indirect
-	github.com/jackc/pgconn v1.14.3 // indirect
 	github.com/jackc/pgio v1.0.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgproto3/v2 v2.3.3 // indirect

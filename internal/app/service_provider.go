@@ -5,13 +5,15 @@ import (
 	"log"
 
 	auth "github.com/algol-84/auth/internal/api/auth"
+	"github.com/algol-84/auth/internal/client/db"
+	"github.com/algol-84/auth/internal/client/db/pg"
 	"github.com/algol-84/auth/internal/closer"
 	"github.com/algol-84/auth/internal/config"
 	"github.com/algol-84/auth/internal/repository"
 	authRepository "github.com/algol-84/auth/internal/repository/auth"
 	"github.com/algol-84/auth/internal/service"
 	authService "github.com/algol-84/auth/internal/service/auth"
-	"github.com/jackc/pgx/v4/pgxpool"
+	// "github.com/jackc/pgx/v4/pgxpool"
 )
 
 // serviceProvider хранит все объекты приложения, как интерфейсы или ссылки на структуры
@@ -19,7 +21,7 @@ type serviceProvider struct {
 	pgConfig   config.PGConfig
 	grpcConfig config.GRPCConfig
 
-	pgPool         *pgxpool.Pool
+	dbClient       db.Client
 	authRepository repository.AuthRepository
 
 	authService service.AuthService
@@ -61,32 +63,28 @@ func (s *serviceProvider) GRPCConfig() config.GRPCConfig {
 	return s.grpcConfig
 }
 
-func (s *serviceProvider) PgPool(ctx context.Context) *pgxpool.Pool {
-	if s.pgPool == nil {
-		pool, err := pgxpool.Connect(ctx, s.PGConfig().DSN())
+func (s *serviceProvider) DBClient(ctx context.Context) db.Client {
+	if s.dbClient == nil {
+		cl, err := pg.New(ctx, s.PGConfig().DSN())
 		if err != nil {
-			log.Fatalf("failed to connect to database: #{err}")
+			log.Fatalf("failed to create db client: %v", err)
 		}
 
-		err = pool.Ping(ctx)
+		err = cl.DB().Ping(ctx)
 		if err != nil {
-			log.Fatalf("ping error: #{err.Error()}")
+			log.Fatalf("ping error: %s", err.Error())
 		}
+		closer.Add(cl.Close)
 
-		closer.Add(func() error {
-			pool.Close()
-			return nil
-		})
-
-		s.pgPool = pool
+		s.dbClient = cl
 	}
 
-	return s.pgPool
+	return s.dbClient
 }
 
 func (s *serviceProvider) AuthRepository(ctx context.Context) repository.AuthRepository {
 	if s.authRepository == nil {
-		s.authRepository = authRepository.NewRepository(s.PgPool(ctx))
+		s.authRepository = authRepository.NewRepository(s.DBClient(ctx))
 	}
 
 	return s.authRepository

@@ -6,12 +6,12 @@ import (
 	"time"
 
 	sq "github.com/Masterminds/squirrel"
+	"github.com/algol-84/auth/internal/client/db"
 	"github.com/algol-84/auth/internal/repository"
 	"github.com/algol-84/auth/internal/repository/auth/converter"
 
 	model "github.com/algol-84/auth/internal/model"
 	modelRepo "github.com/algol-84/auth/internal/repository/auth/model"
-	"github.com/jackc/pgx/v4/pgxpool"
 )
 
 // Представление БД сервиса Auth
@@ -27,11 +27,11 @@ const (
 )
 
 type repo struct {
-	db *pgxpool.Pool
+	db db.Client
 }
 
 // NewRepository конструктор
-func NewRepository(db *pgxpool.Pool) repository.AuthRepository {
+func NewRepository(db db.Client) repository.AuthRepository {
 	return &repo{db: db}
 }
 
@@ -52,7 +52,12 @@ func (r *repo) Create(ctx context.Context, user *model.User) (int64, error) {
 		return 0, err
 	}
 
-	err = r.db.QueryRow(ctx, query, args...).Scan(&userID)
+	q := db.Query{
+		Name:     "auth_repository.Create",
+		QueryRaw: query,
+	}
+
+	err = r.db.DB().QueryRowContext(ctx, q, args...).Scan(&userID)
 	if err != nil {
 		return 0, err
 	}
@@ -72,8 +77,13 @@ func (r *repo) Get(ctx context.Context, id int64) (*model.User, error) {
 		return nil, err
 	}
 
+	q := db.Query{
+		Name:     "auth_repository.Get",
+		QueryRaw: query,
+	}
+
 	var user modelRepo.User
-	err = r.db.QueryRow(ctx, query, args...).Scan(&user.ID, &user.Name, &user.Email, &user.Role, &user.CreatedAt, &user.UpdatedAt)
+	err = r.db.DB().ScanOneContext(ctx, &user, q, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -103,7 +113,12 @@ func (r *repo) Update(ctx context.Context, user *model.UserUpdate) error {
 		return err
 	}
 
-	res, err := r.db.Exec(ctx, query, args...)
+	q := db.Query{
+		Name:     "auth_repository.Update",
+		QueryRaw: query,
+	}
+
+	res, err := r.db.DB().ExecContext(ctx, q, args...)
 	if err != nil {
 		return err
 	}
@@ -127,7 +142,12 @@ func (r *repo) Delete(ctx context.Context, id int64) error {
 		return err
 	}
 
-	res, err := r.db.Exec(ctx, query, args...)
+	q := db.Query{
+		Name:     "auth_repository.Update",
+		QueryRaw: query,
+	}
+
+	res, err := r.db.DB().ExecContext(ctx, q, args...)
 	if err != nil {
 		return err
 	}
