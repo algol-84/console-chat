@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"time"
 
 	sq "github.com/Masterminds/squirrel"
@@ -23,19 +22,6 @@ const (
 
 // Указатель на пул соединений к БД
 var pool *pgxpool.Pool
-
-// User предсталяет пользователя в БД
-// Содержит основные данные пользователя, такие как имя, электронная почта,
-// хеш пароля, ID роли, а также время создания и обновления записи.
-type User struct {
-	ID        int64
-	Name      string
-	Email     string // Может принимать NULL
-	Password  string
-	Role      string
-	CreatedAt time.Time // Заполняется в момент создания юзера
-	UpdatedAt time.Time // Заполняется при апдейте, может принимать NULL
-}
 
 // Connect создает пул подключений к БД Auth
 func Connect(ctx context.Context, connString string) error {
@@ -85,8 +71,6 @@ func CreateChat(ctx context.Context, usernames []string) (int64, error) {
 
 	for _, username := range usernames {
 		builderQuery = builderQuery.Values(chatID, username)
-
-		log.Println(query, args)
 	}
 	query, args, err = builderQuery.ToSql()
 	if err != nil {

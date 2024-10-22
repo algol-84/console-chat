@@ -14,7 +14,7 @@ RUN go build -o ./bin/chat_server cmd/main.go
 
 # второй этап сборки
 # загружаем минимальный линукс без golang (он нужен был только для сборки приложения в п.1)
-FROM alpine:latest
+FROM alpine:3.20
 # Устанавливаем рабочую директорию
 WORKDIR /root/
 # Копируем из п.1 собранный бинарник в рабочую директорию 
@@ -22,4 +22,4 @@ COPY --from=builder /github.com/algol/chat_server/source/bin/chat_server .
 
 ADD .env .
 
-CMD ["./auth_server"]      
+CMD ["./chat_server"]      
