@@ -16,6 +16,16 @@ type Client interface {
 	Close() error
 }
 
+// TxManager менеджер транзакций, который выполняет указанный пользователем обработчик в транзакции
+type TxManager interface {
+	ReadCommitted(ctx context.Context, f Handler) error
+}
+
+// Transactor интерфейс для работы с транзакциями
+type Transactor interface {
+	BeginTx(ctx context.Context, txOptions pgx.TxOptions) (pgx.Tx, error)
+}
+
 // Query обертка над запросом, хранящая имя запроса и сам запрос
 // Имя запроса используется для логирования и потенциально может использоваться еще где-то, например, для трейсинга
 type Query struct {
@@ -50,6 +60,7 @@ type Pinger interface {
 // DB интерфейс для работы с БД
 type DB interface {
 	SQLExecer
+	Transactor
 	Pinger
 	Close()
 }

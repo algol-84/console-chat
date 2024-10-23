@@ -11,6 +11,14 @@ import (
 	"github.com/algol-84/chat-server/internal/client/db"
 )
 
+// Создается кастомный тип для хранения ключа контекста (стандартный тип не работает)
+type key string
+
+// TxKey ключ-флаг транзакции
+const (
+	TxKey key = "tx"
+)
+
 type pg struct {
 	dbc *pgxpool.Pool
 }
@@ -41,14 +49,30 @@ func (p *pg) ScanAllContext(ctx context.Context, dest interface{}, q db.Query, a
 }
 
 func (p *pg) ExecContext(ctx context.Context, q db.Query, args ...interface{}) (pgconn.CommandTag, error) {
+	tx, ok := ctx.Value(TxKey).(pgx.Tx)
+	if ok {
+		return tx.Exec(ctx, q.QueryRaw, args...)
+	}
+
 	return p.dbc.Exec(ctx, q.QueryRaw, args...)
 }
 
 func (p *pg) QueryContext(ctx context.Context, q db.Query, args ...interface{}) (pgx.Rows, error) {
+	// Считывается значение из контекста и если оно кастуется до Tx, то вызывается обращение через транзакцию, иначе через pgx
+	tx, ok := ctx.Value(TxKey).(pgx.Tx)
+	if ok {
+		return tx.Query(ctx, q.QueryRaw, args...)
+	}
+
 	return p.dbc.Query(ctx, q.QueryRaw, args...)
 }
 
 func (p *pg) QueryRowContext(ctx context.Context, q db.Query, args ...interface{}) pgx.Row {
+	tx, ok := ctx.Value(TxKey).(pgx.Tx)
+	if ok {
+		return tx.QueryRow(ctx, q.QueryRaw, args...)
+	}
+
 	return p.dbc.QueryRow(ctx, q.QueryRaw, args...)
 }
 
@@ -62,4 +86,9 @@ func (p *pg) Ping(ctx context.Context) error {
 
 func (p *pg) Close() {
 	p.dbc.Close()
+}
+
+// MakeContextTx добавляет ключ в контекст
+func MakeContextTx(ctx context.Context, tx pgx.Tx) context.Context {
+	return context.WithValue(ctx, TxKey, tx)
 }

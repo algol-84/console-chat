@@ -2,16 +2,28 @@ package chat
 
 import (
 	"context"
-	"log"
 
 	"github.com/algol-84/chat-server/internal/model"
 )
 
 func (s *service) Create(ctx context.Context, chat *model.Chat) (int64, error) {
-	log.Println(chat)
-	id, err := s.chatRepository.Create(ctx, chat)
+	var id int64
+	err := s.txManager.ReadCommitted(ctx, func(ctx context.Context) error {
+		var errTx error
+		id, errTx = s.chatRepository.Create(ctx, chat)
+		if errTx != nil {
+			return errTx
+		}
+
+		_, errTx = s.logRepository.Create(ctx, id, "chat was created")
+		if errTx != nil {
+			return errTx
+		}
+		return nil
+	})
+
 	if err != nil {
-		return 0, nil
+		return 0, err
 	}
 
 	return id, nil

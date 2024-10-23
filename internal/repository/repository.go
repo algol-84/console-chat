@@ -13,8 +13,13 @@ import (
 	"github.com/algol-84/chat-server/internal/model"
 )
 
-// ChatRepository интерфейс реализует репо слой
+// ChatRepository интерфейс реализует репо слой для чат-сервера
 type ChatRepository interface {
 	Create(ctx context.Context, chat *model.Chat) (int64, error)
 	Delete(ctx context.Context, id int64) error
+}
+
+// LogRepository интерфейс реализует репо слой для лога
+type LogRepository interface {
+	Create(ctx context.Context, id int64, info string) (int64, error)
 }
