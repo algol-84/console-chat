@@ -1,0 +1,28 @@
+# Docker Compose version
+version: '3'
+
+# List of mounted data volumes
+volumes:
+  pgchat_volume_local:
+
+# Список контейнеров
+services:
+  # Имя докер контейнера, доступное в докер-сети
+  pgchat-local:
+    image: postgres:14-alpine3.17
+    env_file:
+      - .env  # Указываем файл с переменными окружения
+    ports:
+      - "54322:5432"
+    volumes:
+      - pgchat_volume_local:/var/lib/postgresql/data     
+
+  # migrator-local:
+  #   build:
+  #     context: .
+  #     dockerfile: migration_local.Dockerfile
+  #   restart: on-failure
+  #   environment:
+  #     DB_HOST: pgchat-local
+
+ 
