@@ -18,7 +18,6 @@ message Chat {
 }
 
 message CreateRequest {
-  // repeated string usernames = 1;
   Chat chat = 1;
 }
 

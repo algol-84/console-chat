@@ -18,11 +18,11 @@ services:
       - pgchat_volume_local:/var/lib/postgresql/data     
 
   # migrator-local:
-  #   build:
-  #     context: .
-  #     dockerfile: migration_local.Dockerfile
-  #   restart: on-failure
-  #   environment:
-  #     DB_HOST: pgchat-local
+    build:
+      context: .
+      dockerfile: migration_local.Dockerfile
+    restart: on-failure
+    environment:
+      DB_HOST: pgchat-local
 
  

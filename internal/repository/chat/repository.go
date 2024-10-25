@@ -10,9 +10,7 @@ import (
 	"github.com/algol-84/chat-server/internal/client/db"
 	"github.com/algol-84/chat-server/internal/repository"
 
-	// "github.com/algol-84/chat-server/internal/repository/chat/converter"
 	model "github.com/algol-84/chat-server/internal/model"
-	// modelRepo "github.com/algol-84/chat-server/internal/repository/chat/model"
 )
 
 // Представление БД сервиса Chat-server
