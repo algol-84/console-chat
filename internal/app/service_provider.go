@@ -13,7 +13,6 @@ import (
 	authRepository "github.com/algol-84/auth/internal/repository/auth"
 	"github.com/algol-84/auth/internal/service"
 	authService "github.com/algol-84/auth/internal/service/auth"
-	// "github.com/jackc/pgx/v4/pgxpool"
 )
 
 // serviceProvider хранит все объекты приложения, как интерфейсы или ссылки на структуры
