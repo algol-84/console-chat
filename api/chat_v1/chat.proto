@@ -13,8 +13,12 @@ service ChatV1 {
   rpc SendMessage(SendMessageRequest) returns (google.protobuf.Empty);
 }
 
-message CreateRequest {
+message Chat {
   repeated string usernames = 1;
+}
+
+message CreateRequest {
+  Chat chat = 1;
 }
 
 message CreateResponse {
