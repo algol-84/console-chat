@@ -20,12 +20,12 @@ type User struct {
 // UserUpdate представляет модель апдейта юзера сервисного слоя
 type UserUpdate struct {
 	ID    int64
-	Name  stringValue
-	Email stringValue
-	Role  stringValue
+	Name  StringValue
+	Email StringValue
+	Role  StringValue
 }
 
-type stringValue struct {
+type StringValue struct {
 	Value string
 	Valid bool
 }

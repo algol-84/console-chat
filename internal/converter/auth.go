@@ -30,7 +30,7 @@ func ToUserInfoFromService(user *model.User) *desc.UserInfo {
 		Id:        user.ID,
 		Name:      user.Name,
 		Email:     user.Email,
-		Role:      convertStringToRole(user.Role),
+		Role:      StringToRole(user.Role),
 		CreatedAt: timestamppb.New(user.CreatedAt),
 		UpdatedAt: updatedAt,
 	}
@@ -56,7 +56,7 @@ func ToUserUpdateFromDesc(user *desc.UserUpdate) *model.UserUpdate {
 	return &userUpdate
 }
 
-func convertStringToRole(roleStr string) desc.Role {
+func StringToRole(roleStr string) desc.Role {
 	if roleValue, exists := desc.Role_value[roleStr]; exists {
 		return desc.Role(roleValue)
 	}

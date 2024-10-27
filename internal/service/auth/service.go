@@ -15,3 +15,16 @@ func NewService(authRepository repository.AuthRepository) def.AuthService {
 		authRepository: authRepository,
 	}
 }
+
+func NewMockService(deps ...interface{}) def.AuthService {
+	srv := service{}
+
+	for _, v := range deps {
+		switch s := v.(type) {
+		case repository.AuthRepository:
+			srv.authRepository = s
+		}
+	}
+
+	return &srv
+}
