@@ -25,6 +25,7 @@ type UserUpdate struct {
 	Role  StringValue
 }
 
+// StringValue кастомный тип строки, если Valid=false, то строка не валидна
 type StringValue struct {
 	Value string
 	Valid bool

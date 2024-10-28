@@ -16,6 +16,7 @@ func NewService(authRepository repository.AuthRepository) def.AuthService {
 	}
 }
 
+// NewMockService Mock-конструктор сервисного слоя
 func NewMockService(deps ...interface{}) def.AuthService {
 	srv := service{}
 

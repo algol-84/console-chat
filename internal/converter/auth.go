@@ -56,6 +56,7 @@ func ToUserUpdateFromDesc(user *desc.UserUpdate) *model.UserUpdate {
 	return &userUpdate
 }
 
+// StringToRole конвертирует строку в тип desc.Role
 func StringToRole(roleStr string) desc.Role {
 	if roleValue, exists := desc.Role_value[roleStr]; exists {
 		return desc.Role(roleValue)
