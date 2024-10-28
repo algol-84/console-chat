@@ -2,4 +2,4 @@
 .vscode
 *.code-workspace
 /bin/
-/postgres/bin/
+/postgres/bin//coverage.out

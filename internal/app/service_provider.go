@@ -5,14 +5,15 @@ import (
 	"log"
 
 	chat "github.com/algol-84/chat-server/internal/api/chat"
-	"github.com/algol-84/chat-server/internal/client/db"
-	"github.com/algol-84/chat-server/internal/client/db/pg"
-	"github.com/algol-84/chat-server/internal/closer"
+	chatRepository "github.com/algol-84/chat-server/internal/repository/chat"
+	chatService "github.com/algol-84/chat-server/internal/service/chat"
+
 	"github.com/algol-84/chat-server/internal/config"
 	"github.com/algol-84/chat-server/internal/repository"
-	chatRepository "github.com/algol-84/chat-server/internal/repository/chat"
 	"github.com/algol-84/chat-server/internal/service"
-	chatService "github.com/algol-84/chat-server/internal/service/chat"
+	closer "github.com/algol-84/platform_common/pkg/closer"
+	db "github.com/algol-84/platform_common/pkg/db"
+	pg "github.com/algol-84/platform_common/pkg/db/pg"
 )
 
 // serviceProvider хранит все объекты приложения, как интерфейсы или ссылки на структуры

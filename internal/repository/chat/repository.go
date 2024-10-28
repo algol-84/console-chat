@@ -7,8 +7,8 @@ import (
 	"time"
 
 	sq "github.com/Masterminds/squirrel"
-	"github.com/algol-84/chat-server/internal/client/db"
 	"github.com/algol-84/chat-server/internal/repository"
+	db "github.com/algol-84/platform_common/pkg/db"
 
 	model "github.com/algol-84/chat-server/internal/model"
 )

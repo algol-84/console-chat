@@ -16,6 +16,7 @@ func NewService(chatRepository repository.ChatRepository) def.ChatService {
 	}
 }
 
+// NewMockService Mock-конструктор сервисного слоя
 func NewMockService(deps ...interface{}) def.ChatService {
 	srv := service{}
 
