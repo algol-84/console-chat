@@ -15,6 +15,7 @@ require (
 	github.com/stretchr/testify v1.8.4
 	google.golang.org/grpc v1.67.1
 	google.golang.org/protobuf v1.34.2
+	github.com/algol-84/platform_common v1.0.1 
 )
 
 require (

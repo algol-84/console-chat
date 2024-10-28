@@ -10,9 +10,9 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/reflection"
 
-	"github.com/algol-84/auth/internal/closer"
 	"github.com/algol-84/auth/internal/config"
 	desc "github.com/algol-84/auth/pkg/user_v1"
+	closer "github.com/algol-84/platform_common/pkg/closer"
 )
 
 var configPath string

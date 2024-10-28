@@ -4,15 +4,15 @@ import (
 	"context"
 	"log"
 
-	auth "github.com/algol-84/auth/internal/api/auth"
-	"github.com/algol-84/auth/internal/client/db"
-	"github.com/algol-84/auth/internal/client/db/pg"
-	"github.com/algol-84/auth/internal/closer"
+	"github.com/algol-84/auth/internal/api/auth"
 	"github.com/algol-84/auth/internal/config"
 	"github.com/algol-84/auth/internal/repository"
 	authRepository "github.com/algol-84/auth/internal/repository/auth"
 	"github.com/algol-84/auth/internal/service"
 	authService "github.com/algol-84/auth/internal/service/auth"
+	closer "github.com/algol-84/platform_common/pkg/closer"
+	db "github.com/algol-84/platform_common/pkg/db"
+	pg "github.com/algol-84/platform_common/pkg/db/pg"
 )
 
 // serviceProvider хранит все объекты приложения, как интерфейсы или ссылки на структуры

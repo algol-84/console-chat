@@ -6,7 +6,7 @@ import (
 	"time"
 
 	sq "github.com/Masterminds/squirrel"
-	"github.com/algol-84/auth/internal/client/db"
+	db "github.com/algol-84/platform_common/pkg/db"
 	"github.com/algol-84/auth/internal/repository"
 	"github.com/algol-84/auth/internal/repository/auth/converter"
 
