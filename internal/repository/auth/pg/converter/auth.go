@@ -2,7 +2,7 @@ package converter
 
 import (
 	model "github.com/algol-84/auth/internal/model"
-	modelRepo "github.com/algol-84/auth/internal/repository/auth/model"
+	modelRepo "github.com/algol-84/auth/internal/repository/auth/pg/model"
 )
 
 // ToUserFromRepo конвертирует из модели репо слоя в модель сервисного слоя

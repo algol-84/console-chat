@@ -7,11 +7,11 @@ import (
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/algol-84/auth/internal/repository"
-	"github.com/algol-84/auth/internal/repository/auth/converter"
+	"github.com/algol-84/auth/internal/repository/auth/pg/converter"
 	db "github.com/algol-84/platform_common/pkg/db"
 
 	model "github.com/algol-84/auth/internal/model"
-	modelRepo "github.com/algol-84/auth/internal/repository/auth/model"
+	modelRepo "github.com/algol-84/auth/internal/repository/auth/pg/model"
 )
 
 // Представление БД сервиса Auth

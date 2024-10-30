@@ -6,13 +6,15 @@ import (
 )
 
 type service struct {
-	authRepository repository.AuthRepository
+	authRepository  repository.AuthRepository
+	cacheRepository repository.AuthRepository
 }
 
 // NewService конструктор сервисного слоя
-func NewService(authRepository repository.AuthRepository) def.AuthService {
+func NewService(authRepository repository.AuthRepository, cacheRepository repository.AuthRepository) def.AuthService {
 	return &service{
-		authRepository: authRepository,
+		authRepository:  authRepository,
+		cacheRepository: cacheRepository,
 	}
 }
 

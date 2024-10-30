@@ -18,5 +18,11 @@ func (s *service) Update(ctx context.Context, user *model.UserUpdate) error {
 		return err
 	}
 
+	// Удалить юзера из кэша
+	err = s.cacheRepository.Delete(ctx, user.ID)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

@@ -4,10 +4,15 @@ import (
 	"context"
 	"log"
 
+	redigo "github.com/gomodule/redigo/redis"
+
 	"github.com/algol-84/auth/internal/api/auth"
+	"github.com/algol-84/auth/internal/client/cache"
+	"github.com/algol-84/auth/internal/client/cache/redis"
 	"github.com/algol-84/auth/internal/config"
 	"github.com/algol-84/auth/internal/repository"
-	authRepository "github.com/algol-84/auth/internal/repository/auth"
+	authRepositoryPg "github.com/algol-84/auth/internal/repository/auth/pg"
+	authRepositoryRedis "github.com/algol-84/auth/internal/repository/auth/redis"
 	"github.com/algol-84/auth/internal/service"
 	authService "github.com/algol-84/auth/internal/service/auth"
 	closer "github.com/algol-84/platform_common/pkg/closer"
@@ -17,11 +22,15 @@ import (
 
 // serviceProvider хранит все объекты приложения, как интерфейсы или ссылки на структуры
 type serviceProvider struct {
-	pgConfig   config.PGConfig
-	grpcConfig config.GRPCConfig
+	pgConfig    config.PGConfig
+	grpcConfig  config.GRPCConfig
+	redisConfig config.RedisConfig
 
-	dbClient       db.Client
-	authRepository repository.AuthRepository
+	dbClient        db.Client
+	redisPool       *redigo.Pool
+	redisClient     cache.RedisClient
+	authRepository  repository.AuthRepository
+	cacheRepository repository.AuthRepository
 
 	authService service.AuthService
 
@@ -62,6 +71,19 @@ func (s *serviceProvider) GRPCConfig() config.GRPCConfig {
 	return s.grpcConfig
 }
 
+func (s *serviceProvider) RedisConfig() config.RedisConfig {
+	if s.redisConfig == nil {
+		cfg, err := config.NewRedisConfig()
+		if err != nil {
+			log.Fatalf("failed to get redis config: %s", err.Error())
+		}
+
+		s.redisConfig = cfg
+	}
+
+	return s.redisConfig
+}
+
 func (s *serviceProvider) DBClient(ctx context.Context) db.Client {
 	if s.dbClient == nil {
 		cl, err := pg.New(ctx, s.PGConfig().DSN())
@@ -81,17 +103,47 @@ func (s *serviceProvider) DBClient(ctx context.Context) db.Client {
 	return s.dbClient
 }
 
+func (s *serviceProvider) RedisPool() *redigo.Pool {
+	if s.redisPool == nil {
+		s.redisPool = &redigo.Pool{
+			MaxIdle:     s.RedisConfig().MaxIdle(),
+			IdleTimeout: s.RedisConfig().IdleTimeout(),
+			DialContext: func(ctx context.Context) (redigo.Conn, error) {
+				return redigo.DialContext(ctx, "tcp", s.RedisConfig().Address())
+			},
+		}
+	}
+
+	return s.redisPool
+}
+
+func (s *serviceProvider) RedisClient() cache.RedisClient {
+	if s.redisClient == nil {
+		s.redisClient = redis.NewClient(s.RedisPool(), s.RedisConfig())
+	}
+
+	return s.redisClient
+}
+
 func (s *serviceProvider) AuthRepository(ctx context.Context) repository.AuthRepository {
 	if s.authRepository == nil {
-		s.authRepository = authRepository.NewRepository(s.DBClient(ctx))
+		s.authRepository = authRepositoryPg.NewRepository(s.DBClient(ctx))
 	}
 
 	return s.authRepository
 }
 
+func (s *serviceProvider) CacheRepository(_ context.Context) repository.AuthRepository {
+	if s.cacheRepository == nil {
+		s.cacheRepository = authRepositoryRedis.NewRepository(s.RedisClient())
+	}
+
+	return s.cacheRepository
+}
+
 func (s *serviceProvider) AuthService(ctx context.Context) service.AuthService {
 	if s.authService == nil {
-		s.authService = authService.NewService(s.AuthRepository(ctx))
+		s.authService = authService.NewService(s.AuthRepository(ctx), s.CacheRepository(ctx))
 	}
 
 	return s.authService

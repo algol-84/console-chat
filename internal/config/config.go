@@ -1,6 +1,8 @@
 package config
 
 import (
+	"time"
+
 	"github.com/joho/godotenv"
 )
 
@@ -12,4 +14,12 @@ func Load(path string) error {
 	}
 
 	return nil
+}
+
+// RedisConfig интерфейс конфига редиса
+type RedisConfig interface {
+	Address() string
+	ConnectionTimeout() time.Duration
+	MaxIdle() int
+	IdleTimeout() time.Duration
 }

@@ -29,22 +29,6 @@ func TestDelete(t *testing.T) {
 
 		id      = gofakeit.Int64()
 		repoErr = fmt.Errorf("repo error")
-
-		// req = &model.UserUpdate{
-		// 	ID: id,
-		// 	Name: model.StringValue{
-		// 		Value: name,
-		// 		Valid: true,
-		// 	},
-		// 	Email: model.StringValue{
-		// 		Value: email,
-		// 		Valid: true,
-		// 	},
-		// 	Role: model.StringValue{
-		// 		Value: role,
-		// 		Valid: true,
-		// 	},
-		// }
 	)
 	defer t.Cleanup(mc.Finish)
 

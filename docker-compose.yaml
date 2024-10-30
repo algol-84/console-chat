@@ -3,9 +3,8 @@ version: '3'
 
 # List of mounted data volumes
 volumes:
-  # pg_auth_volume:  
   postgres_volume_local:
-  # postgres_volume_prod:  
+  redis-data:
 
 # Список контейнеров
 services:
@@ -19,14 +18,13 @@ services:
     volumes:
       - postgres_volume_local:/var/lib/postgresql/data     
 
-  # pg-prod:
-  #   image: postgres:14-alpine3.17
-  #   env_file:
-  #     - prod.env
-  #   ports:
-  #     - "54322:5432"
-  #   volumes:
-  #     - postgres_volume_prod:/var/lib/postgresql/data  
+  redis:
+    image: redis:7.2.5-alpine3.20
+    container_name: redis-container
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
 
   migrator-local:
     build:
@@ -35,40 +33,3 @@ services:
     restart: on-failure
     environment:
       DB_HOST: pg-local
-
-  # migrator-prod:
-  #   build:
-  #     context: .
-  #     dockerfile: migration_prod.Dockerfile
-  #   restart: on-failure
-  #   environment:
-  #     DB_HOST: pg-prod  
-
-
-  # pg_auth_service:
-  #   # Docker container name
-  #   container_name: pg_auth
-  #   # The image from which the container is launched. Postgres v14 and minimalistic Alpine Linux are selected
-  #   image: postgres:14-alpine3.17
-  #   # The environment for postgres is specified for correct configuration and launch  
-  #   environment:
-  #     # The values ​​of environment variables are taken from the .env file which is searched by default in the current directory
-  #     - "POSTGRES_DB=${PG_DATABASE_NAME}"
-  #     - "POSTGRES_USER=${PG_USER}"
-  #     - "POSTGRES_PASSWORD=${PG_PASSWORD}"
-  #   ports:
-  #     # Docker internal port is 5432
-  #     # External port is ${PG_PORT} 
-  #     - "${PG_PORT}:5432"
-  #   # Volume is the database data that should be saved after the container is terminated. 
-  #   # This data is stored outside the Postgres container in a specified folder on the host
-  #   volumes:
-  #     - pg_auth_volume:/var/lib/postgresql/data
-
-  # migrator:
-  #   build:
-  #     context: .
-  #     dockerfile: migration.Dockerfile
-  #   restart: on-failure
-  #   environment:
-  #     DB_HOST: pg_auth
