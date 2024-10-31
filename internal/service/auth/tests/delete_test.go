@@ -17,6 +17,7 @@ import (
 func TestDelete(t *testing.T) {
 	t.Parallel()
 	type authRepositoryMockFunc func(mc *minimock.Controller) repository.AuthRepository
+	type cacheRepositoryMockFunc func(mc *minimock.Controller) repository.CacheRepository
 
 	type args struct {
 		ctx context.Context
@@ -33,11 +34,12 @@ func TestDelete(t *testing.T) {
 	defer t.Cleanup(mc.Finish)
 
 	tests := []struct {
-		name               string
-		args               args
-		want               int64
-		err                error
-		authRepositoryMock authRepositoryMockFunc
+		name                string
+		args                args
+		want                int64
+		err                 error
+		authRepositoryMock  authRepositoryMockFunc
+		cacheRepositoryMock cacheRepositoryMockFunc
 	}{
 		{
 			name: "success case",
@@ -48,6 +50,11 @@ func TestDelete(t *testing.T) {
 			err: nil,
 			authRepositoryMock: func(mc *minimock.Controller) repository.AuthRepository {
 				mock := repoMocks.NewAuthRepositoryMock(mc)
+				mock.DeleteMock.Expect(ctx, id).Return(nil)
+				return mock
+			},
+			cacheRepositoryMock: func(mc *minimock.Controller) repository.CacheRepository {
+				mock := repoMocks.NewCacheRepositoryMock(mc)
 				mock.DeleteMock.Expect(ctx, id).Return(nil)
 				return mock
 			},
@@ -64,6 +71,11 @@ func TestDelete(t *testing.T) {
 				mock.DeleteMock.Expect(ctx, id).Return(repoErr)
 				return mock
 			},
+			cacheRepositoryMock: func(mc *minimock.Controller) repository.CacheRepository {
+				mock := repoMocks.NewCacheRepositoryMock(mc)
+				mock.DeleteMock.Expect(ctx, id).Return(repoErr)
+				return mock
+			},
 		},
 	}
 
@@ -73,7 +85,8 @@ func TestDelete(t *testing.T) {
 			t.Parallel()
 
 			authRepoMock := tt.authRepositoryMock(mc)
-			service := auth.NewMockService(authRepoMock)
+			cacheRepoMock := tt.cacheRepositoryMock(mc)
+			service := auth.NewMockService(authRepoMock, cacheRepoMock)
 
 			err := service.Delete(tt.args.ctx, tt.args.req)
 			require.Equal(t, tt.err, err)

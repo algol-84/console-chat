@@ -30,7 +30,7 @@ type serviceProvider struct {
 	redisPool       *redigo.Pool
 	redisClient     cache.RedisClient
 	authRepository  repository.AuthRepository
-	cacheRepository repository.AuthRepository
+	cacheRepository repository.CacheRepository
 
 	authService service.AuthService
 
@@ -133,7 +133,7 @@ func (s *serviceProvider) AuthRepository(ctx context.Context) repository.AuthRep
 	return s.authRepository
 }
 
-func (s *serviceProvider) CacheRepository(_ context.Context) repository.AuthRepository {
+func (s *serviceProvider) CacheRepository(_ context.Context) repository.CacheRepository {
 	if s.cacheRepository == nil {
 		s.cacheRepository = authRepositoryRedis.NewRepository(s.RedisClient())
 	}

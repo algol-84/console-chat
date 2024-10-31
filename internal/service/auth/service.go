@@ -7,11 +7,11 @@ import (
 
 type service struct {
 	authRepository  repository.AuthRepository
-	cacheRepository repository.AuthRepository
+	cacheRepository repository.CacheRepository
 }
 
 // NewService конструктор сервисного слоя
-func NewService(authRepository repository.AuthRepository, cacheRepository repository.AuthRepository) def.AuthService {
+func NewService(authRepository repository.AuthRepository, cacheRepository repository.CacheRepository) def.AuthService {
 	return &service{
 		authRepository:  authRepository,
 		cacheRepository: cacheRepository,
@@ -26,6 +26,8 @@ func NewMockService(deps ...interface{}) def.AuthService {
 		switch s := v.(type) {
 		case repository.AuthRepository:
 			srv.authRepository = s
+		case repository.CacheRepository:
+			srv.cacheRepository = s
 		}
 	}
 

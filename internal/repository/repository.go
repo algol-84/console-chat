@@ -20,3 +20,10 @@ type AuthRepository interface {
 	Update(ctx context.Context, user *model.UserUpdate) error
 	Delete(ctx context.Context, id int64) error
 }
+
+// CacheRepository интерфейс реализует репо слой
+type CacheRepository interface {
+	Create(ctx context.Context, user *model.User) (int64, error)
+	Get(ctx context.Context, id int64) (*model.User, error)
+	Delete(ctx context.Context, id int64) error
+}

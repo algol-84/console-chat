@@ -18,6 +18,7 @@ import (
 func TestUpdate(t *testing.T) {
 	t.Parallel()
 	type authRepositoryMockFunc func(mc *minimock.Controller) repository.AuthRepository
+	type cacheRepositoryMockFunc func(mc *minimock.Controller) repository.CacheRepository
 
 	type args struct {
 		ctx context.Context
@@ -33,7 +34,8 @@ func TestUpdate(t *testing.T) {
 		email = gofakeit.Email()
 		role  = "USER"
 
-		repoErr = fmt.Errorf("repo error")
+		repoErr  = fmt.Errorf("repo error")
+		emptyErr = fmt.Errorf("update request is empty")
 
 		req = &model.UserUpdate{
 			ID: id,
@@ -50,15 +52,32 @@ func TestUpdate(t *testing.T) {
 				Valid: true,
 			},
 		}
+
+		reqFail = &model.UserUpdate{
+			ID: id,
+			Name: model.StringValue{
+				Value: name,
+				Valid: false,
+			},
+			Email: model.StringValue{
+				Value: email,
+				Valid: false,
+			},
+			Role: model.StringValue{
+				Value: role,
+				Valid: false,
+			},
+		}
 	)
 	defer t.Cleanup(mc.Finish)
 
 	tests := []struct {
-		name               string
-		args               args
-		want               int64
-		err                error
-		authRepositoryMock authRepositoryMockFunc
+		name                string
+		args                args
+		want                int64
+		err                 error
+		authRepositoryMock  authRepositoryMockFunc
+		cacheRepositoryMock cacheRepositoryMockFunc
 	}{
 		{
 			name: "success case",
@@ -72,9 +91,14 @@ func TestUpdate(t *testing.T) {
 				mock.UpdateMock.Expect(ctx, req).Return(nil)
 				return mock
 			},
+			cacheRepositoryMock: func(mc *minimock.Controller) repository.CacheRepository {
+				mock := repoMocks.NewCacheRepositoryMock(mc)
+				mock.DeleteMock.Expect(ctx, req.ID).Return(nil)
+				return mock
+			},
 		},
 		{
-			name: "service error case",
+			name: "service PG error case",
 			args: args{
 				ctx: ctx,
 				req: req,
@@ -85,6 +109,43 @@ func TestUpdate(t *testing.T) {
 				mock.UpdateMock.Expect(ctx, req).Return(repoErr)
 				return mock
 			},
+			cacheRepositoryMock: func(_ *minimock.Controller) repository.CacheRepository {
+				// Если произошла ошибка при апдейте базы, то удалять юзера из кеша не нужно
+				// функция не вызывается
+				return nil
+			},
+		},
+		{
+			name: "service Redis error case",
+			args: args{
+				ctx: ctx,
+				req: req,
+			},
+			err: repoErr,
+			authRepositoryMock: func(mc *minimock.Controller) repository.AuthRepository {
+				mock := repoMocks.NewAuthRepositoryMock(mc)
+				mock.UpdateMock.Expect(ctx, req).Return(nil)
+				return mock
+			},
+			cacheRepositoryMock: func(mc *minimock.Controller) repository.CacheRepository {
+				mock := repoMocks.NewCacheRepositoryMock(mc)
+				mock.DeleteMock.Expect(ctx, req.ID).Return(repoErr)
+				return mock
+			},
+		},
+		{
+			name: "service empty request error case",
+			args: args{
+				ctx: ctx,
+				req: reqFail,
+			},
+			err: emptyErr,
+			authRepositoryMock: func(_ *minimock.Controller) repository.AuthRepository {
+				return nil
+			},
+			cacheRepositoryMock: func(_ *minimock.Controller) repository.CacheRepository {
+				return nil
+			},
 		},
 	}
 
@@ -94,7 +155,8 @@ func TestUpdate(t *testing.T) {
 			t.Parallel()
 
 			authRepoMock := tt.authRepositoryMock(mc)
-			service := auth.NewMockService(authRepoMock)
+			cacheRepoMock := tt.cacheRepositoryMock(mc)
+			service := auth.NewMockService(authRepoMock, cacheRepoMock)
 
 			err := service.Update(tt.args.ctx, tt.args.req)
 			require.Equal(t, tt.err, err)

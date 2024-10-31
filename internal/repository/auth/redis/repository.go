@@ -2,6 +2,7 @@ package pg
 
 import (
 	"context"
+	"errors"
 	"strconv"
 
 	redigo "github.com/gomodule/redigo/redis"
@@ -18,7 +19,7 @@ type repo struct {
 }
 
 // NewRepository конструктор репо слоя редиса
-func NewRepository(cl cache.RedisClient) repository.AuthRepository {
+func NewRepository(cl cache.RedisClient) repository.CacheRepository {
 	return &repo{cl: cl}
 }
 
@@ -55,16 +56,17 @@ func (r *repo) Get(ctx context.Context, id int64) (*model.User, error) {
 	return converter.ToUserFromRepo(&user), nil
 }
 
-func (r *repo) Update(_ context.Context, _ *model.UserUpdate) error {
-	return nil
-}
+// func (r *repo) Update(_ context.Context, _ *model.UserUpdate) error {
+// 	return nil
+// }
 
 func (r *repo) Delete(ctx context.Context, id int64) error {
 	idStr := strconv.FormatInt(id, 10)
 
 	err := r.cl.Del(ctx, idStr)
 	if err != nil {
-		return err
+		//return err
+		return errors.New("deletion error")
 	}
 
 	return nil

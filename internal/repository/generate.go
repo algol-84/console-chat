@@ -7,3 +7,4 @@ package repository
 // -o директория куда положить
 // -s добавляет постфикс к имени файла
 //go:generate minimock -i AuthRepository -o ./mocks/ -s "_minimock.go"
+//go:generate minimock -i CacheRepository -o ./mocks/ -s "_minimock.go"

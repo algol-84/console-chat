@@ -3,7 +3,6 @@ package tests
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"testing"
 
 	"github.com/brianvoe/gofakeit/v6"
@@ -20,6 +19,7 @@ func TestGet(t *testing.T) {
 	t.Parallel()
 	// mc - служебный объект minimock
 	type authRepositoryMockFunc func(mc *minimock.Controller) repository.AuthRepository
+	type cacheRepositoryMockFunc func(mc *minimock.Controller) repository.CacheRepository
 
 	type args struct {
 		ctx context.Context
@@ -37,7 +37,7 @@ func TestGet(t *testing.T) {
 		createdAt = gofakeit.Date()
 		updatedAt = gofakeit.Date()
 
-		repoErr = fmt.Errorf("repo error")
+		//	repoErr = fmt.Errorf("repo error")
 
 		res = &model.User{
 			ID:        id,
@@ -54,22 +54,52 @@ func TestGet(t *testing.T) {
 	defer t.Cleanup(mc.Finish)
 
 	tests := []struct {
-		name               string
-		args               args
-		want               *model.User
-		err                error
-		authRepositoryMock authRepositoryMockFunc
+		name                string
+		args                args
+		want                *model.User
+		err                 error
+		authRepositoryMock  authRepositoryMockFunc
+		cacheRepositoryMock cacheRepositoryMockFunc
 	}{
 		{
-			name: "success case",
+			name: "success case from cache",
 			args: args{
 				ctx: ctx,
 				req: id,
 			},
 			want: res,
 			err:  nil,
+			// При удачном запросе из кеша в базу не ходим
+			authRepositoryMock: func(_ *minimock.Controller) repository.AuthRepository {
+				return nil
+			},
+			cacheRepositoryMock: func(mc *minimock.Controller) repository.CacheRepository {
+				mock := repoMocks.NewCacheRepositoryMock(mc)
+				mock.GetMock.Expect(ctx, id).Return(res, nil)
+				return mock
+			},
+		},
+		{
+			name: "success case from PG",
+			args: args{
+				ctx: ctx,
+				req: id,
+			},
+			want: res,
+			err:  nil,
+			// В кэше юзер не найден, идем в базу
+			cacheRepositoryMock: func(mc *minimock.Controller) repository.CacheRepository {
+				mock := repoMocks.NewCacheRepositoryMock(mc)
+				// Ожидаем получение юзера из кэша
+				mock.GetMock.Expect(ctx, id).Return(nil, model.ErrorUserNotFound)
+				// Ожидаем добавление юзера в кэш
+				mock.CreateMock.Expect(ctx, res).Return(id, nil)
+				return mock
+			},
+			// А в базе нашелся
 			authRepositoryMock: func(mc *minimock.Controller) repository.AuthRepository {
 				mock := repoMocks.NewAuthRepositoryMock(mc)
+				// Ожидаем получение юзера из базы
 				mock.GetMock.Expect(ctx, id).Return(res, nil)
 				return mock
 			},
@@ -81,10 +111,42 @@ func TestGet(t *testing.T) {
 				req: id,
 			},
 			want: nil,
-			err:  repoErr,
+			err:  model.ErrorUserNotFound,
+			// Ожидаем ошибку что юзер не найден в базе
 			authRepositoryMock: func(mc *minimock.Controller) repository.AuthRepository {
 				mock := repoMocks.NewAuthRepositoryMock(mc)
-				mock.GetMock.Expect(ctx, id).Return(nil, repoErr)
+				mock.GetMock.Expect(ctx, id).Return(nil, model.ErrorUserNotFound)
+				return mock
+			},
+			// В кэше юзера тоже нет
+			cacheRepositoryMock: func(mc *minimock.Controller) repository.CacheRepository {
+				mock := repoMocks.NewCacheRepositoryMock(mc)
+				mock.GetMock.Expect(ctx, id).Return(nil, model.ErrorUserNotFound)
+				return mock
+			},
+		},
+		{
+			name: "service error case: cache internal error",
+			args: args{
+				ctx: ctx,
+				req: id,
+			},
+			want: nil,
+			err:  model.ErrorCacheInternal,
+
+			authRepositoryMock: func(mc *minimock.Controller) repository.AuthRepository {
+				mock := repoMocks.NewAuthRepositoryMock(mc)
+				// Ожидаем получению юзера из базы
+				mock.GetMock.Expect(ctx, id).Return(res, nil)
+				return mock
+			},
+
+			cacheRepositoryMock: func(mc *minimock.Controller) repository.CacheRepository {
+				mock := repoMocks.NewCacheRepositoryMock(mc)
+				// Ожидаем, что юзер не найден в кэше
+				mock.GetMock.Expect(ctx, id).Return(nil, model.ErrorUserNotFound)
+				// Ожидаем добавление юзера в кэш, с возвратом ошибки записи
+				mock.CreateMock.Expect(ctx, res).Return(id, model.ErrorCacheInternal)
 				return mock
 			},
 		},
@@ -96,7 +158,8 @@ func TestGet(t *testing.T) {
 			t.Parallel()
 
 			authRepoMock := tt.authRepositoryMock(mc)
-			service := auth.NewMockService(authRepoMock)
+			cacheRepoMock := tt.cacheRepositoryMock(mc)
+			service := auth.NewMockService(authRepoMock, cacheRepoMock)
 
 			newID, err := service.Get(tt.args.ctx, tt.args.req)
 			require.Equal(t, tt.err, err)
