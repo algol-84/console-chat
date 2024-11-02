@@ -14,7 +14,7 @@ import (
 func (i *Implementation) Create(ctx context.Context, req *desc.CreateRequest) (*desc.CreateResponse, error) {
 	userID, err := i.authService.Create(ctx, converter.FromUserToService(req.User))
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "user creation in DB returned with error: %s", err)
+		return nil, status.Errorf(codes.Internal, "user creation in DB returned with error")
 	}
 
 	return &desc.CreateResponse{

@@ -15,7 +15,7 @@ import (
 func (i *Implementation) Update(ctx context.Context, req *desc.UpdateRequest) (*emptypb.Empty, error) {
 	err := i.authService.Update(ctx, converter.ToUserUpdateFromDesc(req.UserUpdate))
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "updating user in the DB returned with an error: %s", err)
+		return nil, status.Errorf(codes.Internal, "updating user in the DB returned with an error")
 	}
 
 	return &emptypb.Empty{}, nil
