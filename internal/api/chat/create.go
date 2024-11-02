@@ -14,7 +14,7 @@ import (
 func (i *Implementation) Create(ctx context.Context, req *desc.CreateRequest) (*desc.CreateResponse, error) {
 	userID, err := i.chatService.Create(ctx, converter.FromChatToService(req.Chat))
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "user creation in DB returned with error: %s", err)
+		return nil, status.Errorf(codes.Internal, "user creation in DB returned with error")
 	}
 
 	return &desc.CreateResponse{

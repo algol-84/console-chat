@@ -14,14 +14,6 @@ CREATE TABLE chat_user (
     PRIMARY KEY (chat_id, user_name)
 );
 
-CREATE TABLE chat_log (
-    chat_id INT NOT NULL,
-    info TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-
 -- +goose Down
 drop table chat_user;
 drop table chat_room;
-drop table chat_log;
