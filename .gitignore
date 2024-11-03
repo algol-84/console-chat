@@ -3,4 +3,4 @@
 *.code-workspace
 /bin/
 /coverage.out
-vendor.protogen
+/vendor.protogen/
