@@ -4,13 +4,31 @@ package chat_v1;
 
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/empty.proto";
+import "google/api/annotations.proto";
 
 option go_package = "github.com/algol-84/chat-server/pkg/chat_v1;chat_v1";
 
 service ChatV1 {
-  rpc Create(CreateRequest) returns (CreateResponse);
-  rpc Delete(DeleteRequest) returns (google.protobuf.Empty);
-  rpc SendMessage(SendMessageRequest) returns (google.protobuf.Empty);
+  rpc Create(CreateRequest) returns (CreateResponse) {
+    // В опциях описываем метод http
+    option (google.api.http) = {
+      // указаваем метод http и путь до ручки
+      post: "/chat/v1/create"
+      // "*" все что приходит - это боди
+      body: "*"
+    };  
+  }
+  rpc Delete(DeleteRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/chat/v1/delete"
+    };
+  }
+  rpc SendMessage(SendMessageRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      post: "/chat/v1/send-message"
+      body: "*"
+    };
+  }
 }
 
 message Chat {
