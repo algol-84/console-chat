@@ -5,6 +5,7 @@ package chat_v1;
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/empty.proto";
 import "google/api/annotations.proto";
+import "validate/validate.proto";
 
 option go_package = "github.com/algol-84/chat-server/pkg/chat_v1;chat_v1";
 

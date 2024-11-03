@@ -1,6 +1,6 @@
 .idea
 .vscode
 *.code-workspace
-/bin/
-/coverage.out
-/vendor.protogen/
+bin
+coverage.out
+vendor.protogen
