@@ -6,8 +6,27 @@ import "google/protobuf/timestamp.proto";
 import "google/protobuf/empty.proto";
 import "google/api/annotations.proto";
 import "validate/validate.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
 
 option go_package = "github.com/algol-84/chat-server/pkg/chat_v1;chat_v1";
+
+// Swagger документация генерируется только для HTTP ручек
+option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
+  info: {
+    title: "Chat API"
+    version: "1.0.0"
+    contact: {
+      name: "algol"
+      email: "algol@mail.ru"
+    };
+  };
+
+  host: "localhost:8080",
+  schemes: HTTP,
+  schemes: HTTPS,
+  consumes: "application/json",
+  produces: "application/json",
+};
 
 service ChatV1 {
   rpc Create(CreateRequest) returns (CreateResponse) {
@@ -32,7 +51,9 @@ service ChatV1 {
   }
 }
 
+// Добавлена валидация строк в сообщении Chat
 message Chat {
+  // Список юзеров в чате
   repeated string usernames = 1  [(validate.rules).repeated = {
     min_items: 1, // Минимальное количество элементов
     unique: true,  // Уникальность элементов
