@@ -38,6 +38,8 @@ generate-chat-api:
 	api/chat_v1/chat.proto 
 generate-chat-ann:
 	protoc --proto_path api/chat_v1 --proto_path vendor.protogen \
+	--validate_out lang=go:pkg/chat_v1 --validate_opt=paths=source_relative \
+	--plugin=protoc-gen-validate=bin/protoc-gen-validate \
 	--grpc-gateway_out=pkg/chat_v1 --grpc-gateway_opt=paths=source_relative \
 	--plugin=protoc-gen-grpc-gateway=bin/protoc-gen-grpc-gateway \
 	api/chat_v1/chat.proto
@@ -65,9 +67,17 @@ test-coverage:
 	grep -sqFx "/coverage.out" .gitignore || echo "/coverage.out" >> .gitignore
 
 vendor-proto:
+# Проверить, если не существует, то скачать grpc proto gateway
 		@if [ ! -d vendor.protogen/google ]; then \
 			git clone https://github.com/googleapis/googleapis vendor.protogen/googleapis &&\
 			mkdir -p  vendor.protogen/google/ &&\
 			mv vendor.protogen/googleapis/google/api vendor.protogen/google &&\
 			rm -rf vendor.protogen/googleapis ;\
+		fi
+# Проверить, если не существует, то скачать grps proto валидатор
+		@if [ ! -d vendor.protogen/validate ]; then \
+			mkdir -p vendor.protogen/validate &&\
+			git clone https://github.com/envoyproxy/protoc-gen-validate vendor.protogen/protoc-gen-validate &&\
+			mv vendor.protogen/protoc-gen-validate/validate/*.proto vendor.protogen/validate &&\
+			rm -rf vendor.protogen/protoc-gen-validate ;\
 		fi

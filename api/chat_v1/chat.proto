@@ -33,7 +33,16 @@ service ChatV1 {
 }
 
 message Chat {
-  repeated string usernames = 1;
+  repeated string usernames = 1  [(validate.rules).repeated = {
+    min_items: 1, // Минимальное количество элементов
+    unique: true,  // Уникальность элементов
+    items: {
+      string: { // Правила для каждого элемента
+        min_len: 1, // Минимальная длина строки
+        max_len: 50 // Максимальная длина строки
+      }
+    }
+  }];
 }
 
 message CreateRequest {
