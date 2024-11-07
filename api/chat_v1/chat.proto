@@ -55,31 +55,37 @@ service ChatV1 {
 message Chat {
   // Список юзеров в чате
   repeated string usernames = 1  [(validate.rules).repeated = {
-    min_items: 1, // Минимальное количество элементов
-    unique: true,  // Уникальность элементов
+    min_items: 1,   // Минимальное количество юзеров
+    unique: true,   // Учитывать уникальность юзеров в чате
     items: {
-      string: { // Правила для каждого элемента
-        min_len: 1, // Минимальная длина строки
-        max_len: 50 // Максимальная длина строки
+      string: {     // Правила для каждого имени 
+        min_len: 1, // Минимальная длина имени юзера
+        max_len: 50 // Максимальная длина имени юзера
       }
     }
   }];
 }
 
 message CreateRequest {
+  // Создает новый чат из списка юзеров в запросе
   Chat chat = 1;
 }
 
 message CreateResponse {
+  // Возвращает ответ с идентификатором созданного чата
   int64 id = 1;
 }
 
 message DeleteRequest {
+  // Удаляет чат с заданным идентификатором
   int64 id = 1;
 }
 
 message SendMessageRequest {
+  // Имя пользователя-отправителя сообщения
   string from = 1;
+  // Текст сообщения
   string text = 2;
+  // Время отправки
   google.protobuf.Timestamp timestamp = 3;
 }

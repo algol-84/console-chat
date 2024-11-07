@@ -78,6 +78,7 @@
         "parameters": [
           {
             "name": "id",
+            "description": "Удаляет чат с заданным идентификатором",
             "in": "query",
             "required": false,
             "type": "string",
@@ -141,7 +142,8 @@
       "type": "object",
       "properties": {
         "chat": {
-          "$ref": "#/definitions/chat_v1Chat"
+          "$ref": "#/definitions/chat_v1Chat",
+          "title": "Создает новый чат из списка юзеров в запросе"
         }
       }
     },
@@ -150,7 +152,8 @@
       "properties": {
         "id": {
           "type": "string",
-          "format": "int64"
+          "format": "int64",
+          "title": "Возвращает ответ с идентификатором созданного чата"
         }
       }
     },
@@ -158,14 +161,17 @@
       "type": "object",
       "properties": {
         "from": {
-          "type": "string"
+          "type": "string",
+          "title": "Имя пользователя-отправителя сообщения"
         },
         "text": {
-          "type": "string"
+          "type": "string",
+          "title": "Текст сообщения"
         },
         "timestamp": {
           "type": "string",
-          "format": "date-time"
+          "format": "date-time",
+          "title": "Время отправки"
         }
       }
     },
