@@ -56,10 +56,10 @@ func (m *Chat) validate(all bool) error {
 
 	var errors []error
 
-	if len(m.GetUsernames()) < 1 {
+	if len(m.GetUsernames()) < 2 {
 		err := ChatValidationError{
 			field:  "Usernames",
-			reason: "value must contain at least 1 item(s)",
+			reason: "value must contain at least 2 item(s)",
 		}
 		if !all {
 			return err

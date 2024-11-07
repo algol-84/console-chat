@@ -55,7 +55,7 @@ service ChatV1 {
 message Chat {
   // Список юзеров в чате
   repeated string usernames = 1  [(validate.rules).repeated = {
-    min_items: 1,   // Минимальное количество юзеров
+    min_items: 2,   // Минимальное количество юзеров
     unique: true,   // Учитывать уникальность юзеров в чате
     items: {
       string: {     // Правила для каждого имени 
