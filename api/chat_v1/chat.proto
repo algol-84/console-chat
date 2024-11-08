@@ -4,33 +4,88 @@ package chat_v1;
 
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/empty.proto";
+import "google/api/annotations.proto";
+import "validate/validate.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
 
 option go_package = "github.com/algol-84/chat-server/pkg/chat_v1;chat_v1";
 
+// Swagger документация генерируется только для HTTP ручек
+option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
+  info: {
+    title: "Chat API"
+    version: "1.0.0"
+    contact: {
+      name: "algol"
+      email: "algol@mail.ru"
+    };
+  };
+
+  host: "localhost:8080",
+  schemes: HTTP,
+  schemes: HTTPS,
+  consumes: "application/json",
+  produces: "application/json",
+};
+
 service ChatV1 {
-  rpc Create(CreateRequest) returns (CreateResponse);
-  rpc Delete(DeleteRequest) returns (google.protobuf.Empty);
-  rpc SendMessage(SendMessageRequest) returns (google.protobuf.Empty);
+  rpc Create(CreateRequest) returns (CreateResponse) {
+    // В опциях описываем метод http
+    option (google.api.http) = {
+      // указаваем метод http и путь до ручки
+      post: "/chat/v1"
+      // "*" все что приходит - это боди
+      body: "*"
+    };  
+  }
+  rpc Delete(DeleteRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/chat/v1"
+    };
+  }
+  rpc SendMessage(SendMessageRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      post: "/chat/v1/send-message"
+      body: "*"
+    };
+  }
 }
 
+// Добавлена валидация строк в сообщении Chat
 message Chat {
-  repeated string usernames = 1;
+  // Список юзеров в чате
+  repeated string usernames = 1  [(validate.rules).repeated = {
+    min_items: 2,   // Минимальное количество юзеров
+    unique: true,   // Учитывать уникальность юзеров в чате
+    items: {
+      string: {     // Правила для каждого имени 
+        min_len: 1, // Минимальная длина имени юзера
+        max_len: 50 // Максимальная длина имени юзера
+      }
+    }
+  }];
 }
 
 message CreateRequest {
+  // Создает новый чат из списка юзеров в запросе
   Chat chat = 1;
 }
 
 message CreateResponse {
+  // Возвращает ответ с идентификатором созданного чата
   int64 id = 1;
 }
 
 message DeleteRequest {
+  // Удаляет чат с заданным идентификатором
   int64 id = 1;
 }
 
 message SendMessageRequest {
+  // Имя пользователя-отправителя сообщения
   string from = 1;
+  // Текст сообщения
   string text = 2;
+  // Время отправки
   google.protobuf.Timestamp timestamp = 3;
 }

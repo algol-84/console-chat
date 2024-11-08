@@ -1,0 +1,205 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Chat API",
+    "version": "1.0.0",
+    "contact": {
+      "name": "algol",
+      "email": "algol@mail.ru"
+    }
+  },
+  "tags": [
+    {
+      "name": "ChatV1"
+    }
+  ],
+  "host": "localhost:8080",
+  "schemes": [
+    "http",
+    "https"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/chat/v1": {
+      "delete": {
+        "operationId": "ChatV1_Delete",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {}
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "description": "Удаляет чат с заданным идентификатором",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "ChatV1"
+        ]
+      },
+      "post": {
+        "operationId": "ChatV1_Create",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/chat_v1CreateResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/chat_v1CreateRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ChatV1"
+        ]
+      }
+    },
+    "/chat/v1/send-message": {
+      "post": {
+        "operationId": "ChatV1_SendMessage",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {}
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/chat_v1SendMessageRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ChatV1"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "chat_v1Chat": {
+      "type": "object",
+      "properties": {
+        "usernames": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "Список юзеров в чате"
+        }
+      },
+      "title": "Добавлена валидация строк в сообщении Chat"
+    },
+    "chat_v1CreateRequest": {
+      "type": "object",
+      "properties": {
+        "chat": {
+          "$ref": "#/definitions/chat_v1Chat",
+          "title": "Создает новый чат из списка юзеров в запросе"
+        }
+      }
+    },
+    "chat_v1CreateResponse": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "int64",
+          "title": "Возвращает ответ с идентификатором созданного чата"
+        }
+      }
+    },
+    "chat_v1SendMessageRequest": {
+      "type": "object",
+      "properties": {
+        "from": {
+          "type": "string",
+          "title": "Имя пользователя-отправителя сообщения"
+        },
+        "text": {
+          "type": "string",
+          "title": "Текст сообщения"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time",
+          "title": "Время отправки"
+        }
+      }
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {}
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    }
+  }
+}
