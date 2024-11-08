@@ -25,39 +25,7 @@
     "application/json"
   ],
   "paths": {
-    "/chat/v1/create": {
-      "post": {
-        "operationId": "ChatV1_Create",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/chat_v1CreateResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/chat_v1CreateRequest"
-            }
-          }
-        ],
-        "tags": [
-          "ChatV1"
-        ]
-      }
-    },
-    "/chat/v1/delete": {
+    "/chat/v1": {
       "delete": {
         "operationId": "ChatV1_Delete",
         "responses": {
@@ -83,6 +51,36 @@
             "required": false,
             "type": "string",
             "format": "int64"
+          }
+        ],
+        "tags": [
+          "ChatV1"
+        ]
+      },
+      "post": {
+        "operationId": "ChatV1_Create",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/chat_v1CreateResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/chat_v1CreateRequest"
+            }
           }
         ],
         "tags": [

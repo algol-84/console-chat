@@ -27,7 +27,7 @@ get-deps:
 generate:
 	@echo ">  Generate Chat API..."
 	make generate-chat-api
-	make generate-chat-ann
+	make generate-chat-opt
 	
 generate-chat-api:
 	mkdir -p pkg/chat_v1

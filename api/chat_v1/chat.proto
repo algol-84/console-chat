@@ -33,14 +33,14 @@ service ChatV1 {
     // В опциях описываем метод http
     option (google.api.http) = {
       // указаваем метод http и путь до ручки
-      post: "/chat/v1/create"
+      post: "/chat/v1"
       // "*" все что приходит - это боди
       body: "*"
     };  
   }
   rpc Delete(DeleteRequest) returns (google.protobuf.Empty) {
     option (google.api.http) = {
-      delete: "/chat/v1/delete"
+      delete: "/chat/v1"
     };
   }
   rpc SendMessage(SendMessageRequest) returns (google.protobuf.Empty) {
