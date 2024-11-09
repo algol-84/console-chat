@@ -37,8 +37,6 @@ func TestGet(t *testing.T) {
 		createdAt = gofakeit.Date()
 		updatedAt = gofakeit.Date()
 
-		//	repoErr = fmt.Errorf("repo error")
-
 		res = &model.User{
 			ID:        id,
 			Name:      name,

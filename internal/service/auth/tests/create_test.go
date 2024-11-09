@@ -2,6 +2,7 @@ package tests
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"testing"
 
@@ -9,6 +10,8 @@ import (
 	"github.com/gojuno/minimock/v3"
 	"github.com/stretchr/testify/require"
 
+	"github.com/algol-84/auth/internal/client/kafka"
+	kafkaMocks "github.com/algol-84/auth/internal/client/kafka/mocks"
 	"github.com/algol-84/auth/internal/model"
 	"github.com/algol-84/auth/internal/repository"
 	repoMocks "github.com/algol-84/auth/internal/repository/mocks"
@@ -18,10 +21,12 @@ import (
 func TestCreate(t *testing.T) {
 	t.Parallel()
 	type authRepositoryMockFunc func(mc *minimock.Controller) repository.AuthRepository
+	type kafkaProducerMockFunc func(mc *minimock.Controller) kafka.Producer
 
 	type args struct {
-		ctx context.Context
-		req *model.User
+		ctx  context.Context
+		req  *model.User
+		data []byte
 	}
 
 	var (
@@ -43,6 +48,8 @@ func TestCreate(t *testing.T) {
 			Email:           email,
 			Role:            role,
 		}
+
+		data, _ = json.Marshal(req)
 	)
 	defer t.Cleanup(mc.Finish)
 
@@ -52,12 +59,14 @@ func TestCreate(t *testing.T) {
 		want               int64
 		err                error
 		authRepositoryMock authRepositoryMockFunc
+		kafkaProducerMock  kafkaProducerMockFunc
 	}{
 		{
 			name: "success case",
 			args: args{
-				ctx: ctx,
-				req: req,
+				ctx:  ctx,
+				req:  req,
+				data: data,
 			},
 			want: id,
 			err:  nil,
@@ -66,12 +75,18 @@ func TestCreate(t *testing.T) {
 				mock.CreateMock.Expect(ctx, req).Return(id, nil)
 				return mock
 			},
+			kafkaProducerMock: func(mc *minimock.Controller) kafka.Producer {
+				mock := kafkaMocks.NewProducerMock(mc)
+				mock.ProduceMock.Expect(ctx, data).Return(nil)
+				return mock
+			},
 		},
 		{
 			name: "service error case",
 			args: args{
-				ctx: ctx,
-				req: req,
+				ctx:  ctx,
+				req:  req,
+				data: data,
 			},
 			want: 0,
 			err:  repoErr,
@@ -79,6 +94,10 @@ func TestCreate(t *testing.T) {
 				mock := repoMocks.NewAuthRepositoryMock(mc)
 				mock.CreateMock.Expect(ctx, req).Return(0, repoErr)
 				return mock
+			},
+			kafkaProducerMock: func(_ *minimock.Controller) kafka.Producer {
+				// Если запись в базу вернулась с ошибкой, то запись в кафку не происходит
+				return nil
 			},
 		},
 	}
@@ -89,7 +108,8 @@ func TestCreate(t *testing.T) {
 			t.Parallel()
 
 			authRepoMock := tt.authRepositoryMock(mc)
-			service := auth.NewMockService(authRepoMock)
+			kafkaMock := tt.kafkaProducerMock(mc)
+			service := auth.NewMockService(authRepoMock, kafkaMock)
 
 			newID, err := service.Create(tt.args.ctx, tt.args.req)
 			require.Equal(t, tt.err, err)

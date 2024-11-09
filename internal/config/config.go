@@ -23,3 +23,10 @@ type RedisConfig interface {
 	MaxIdle() int
 	IdleTimeout() time.Duration
 }
+
+// KafkaProducerConfig интерфейс конфига кафки
+type KafkaProducerConfig interface {
+	Brokers() []string
+	GroupID() string
+	Topic() string
+}
