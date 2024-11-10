@@ -26,6 +26,10 @@ func (s *service) Create(ctx context.Context, user *model.User) (int64, error) {
 
 	// Отправить JSON с юзером в кафку
 	err = s.kafkaProducer.Produce(ctx, data)
+	if err != nil {
+		log.Printf("failed to produce log message to Kafka: %v\n", err.Error())
+		return 0, err
+	}
 
-	return id, err
+	return id, nil
 }

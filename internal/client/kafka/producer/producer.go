@@ -15,7 +15,7 @@ type producer struct {
 
 // NewProducer конструктор кафка продьюсера
 func NewProducer(config config.KafkaProducerConfig) *producer {
-	p, err := newSyncProducer(config.Brokers())
+	p, err := newSyncProducer(config.Brokers(), config.RetryMax())
 	if err != nil {
 		log.Printf("failed to start producer: %v\n", err.Error())
 	}
@@ -26,10 +26,10 @@ func NewProducer(config config.KafkaProducerConfig) *producer {
 	}
 }
 
-func newSyncProducer(brokerList []string) (sarama.SyncProducer, error) {
+func newSyncProducer(brokerList []string, retryMax int) (sarama.SyncProducer, error) {
 	config := sarama.NewConfig()
 	config.Producer.RequiredAcks = sarama.WaitForAll
-	config.Producer.Retry.Max = 5
+	config.Producer.Retry.Max = retryMax
 	config.Producer.Return.Successes = true
 
 	producer, err := sarama.NewSyncProducer(brokerList, config)

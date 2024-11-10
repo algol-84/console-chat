@@ -29,4 +29,5 @@ type KafkaProducerConfig interface {
 	Brokers() []string
 	GroupID() string
 	Topic() string
+	RetryMax() int
 }
