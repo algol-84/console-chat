@@ -9,6 +9,8 @@ import (
 	"github.com/algol-84/auth/internal/api/auth"
 	"github.com/algol-84/auth/internal/client/cache"
 	"github.com/algol-84/auth/internal/client/cache/redis"
+	"github.com/algol-84/auth/internal/client/kafka"
+	"github.com/algol-84/auth/internal/client/kafka/producer"
 	"github.com/algol-84/auth/internal/config"
 	"github.com/algol-84/auth/internal/repository"
 	authRepositoryPg "github.com/algol-84/auth/internal/repository/auth/pg"
@@ -22,10 +24,12 @@ import (
 
 // serviceProvider хранит все объекты приложения, как интерфейсы или ссылки на структуры
 type serviceProvider struct {
-	pgConfig    config.PGConfig
-	grpcConfig  config.GRPCConfig
-	redisConfig config.RedisConfig
+	pgConfig            config.PGConfig
+	grpcConfig          config.GRPCConfig
+	redisConfig         config.RedisConfig
+	kafkaProducerConfig config.KafkaProducerConfig
 
+	kafkaProducer   kafka.Producer
 	dbClient        db.Client
 	redisPool       *redigo.Pool
 	redisClient     cache.RedisClient
@@ -69,6 +73,20 @@ func (s *serviceProvider) GRPCConfig() config.GRPCConfig {
 	}
 
 	return s.grpcConfig
+}
+
+// KafkaProducerConfig инициализирует считывание настроек Кафки из файла конфига
+func (s *serviceProvider) KafkaProducerConfig() config.KafkaProducerConfig {
+	if s.kafkaProducerConfig == nil {
+		cfg, err := config.NewKafkaProducerConfig()
+		if err != nil {
+			log.Fatalf("failed to get kafka consumer config: %s", err.Error())
+		}
+
+		s.kafkaProducerConfig = cfg
+	}
+
+	return s.kafkaProducerConfig
 }
 
 func (s *serviceProvider) RedisConfig() config.RedisConfig {
@@ -125,6 +143,14 @@ func (s *serviceProvider) RedisClient() cache.RedisClient {
 	return s.redisClient
 }
 
+func (s *serviceProvider) KafkaProducer() kafka.Producer {
+	if s.kafkaProducer == nil {
+		s.kafkaProducer = producer.NewProducer(s.KafkaProducerConfig())
+	}
+
+	return s.kafkaProducer
+}
+
 func (s *serviceProvider) AuthRepository(ctx context.Context) repository.AuthRepository {
 	if s.authRepository == nil {
 		s.authRepository = authRepositoryPg.NewRepository(s.DBClient(ctx))
@@ -143,7 +169,7 @@ func (s *serviceProvider) CacheRepository(_ context.Context) repository.CacheRep
 
 func (s *serviceProvider) AuthService(ctx context.Context) service.AuthService {
 	if s.authService == nil {
-		s.authService = authService.NewService(s.AuthRepository(ctx), s.CacheRepository(ctx))
+		s.authService = authService.NewService(s.AuthRepository(ctx), s.CacheRepository(ctx), s.KafkaProducer())
 	}
 
 	return s.authService

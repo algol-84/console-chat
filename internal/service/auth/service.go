@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"github.com/algol-84/auth/internal/client/kafka"
 	"github.com/algol-84/auth/internal/repository"
 	def "github.com/algol-84/auth/internal/service"
 )
@@ -8,13 +9,19 @@ import (
 type service struct {
 	authRepository  repository.AuthRepository
 	cacheRepository repository.CacheRepository
+	kafkaProducer   kafka.Producer
 }
 
 // NewService конструктор сервисного слоя
-func NewService(authRepository repository.AuthRepository, cacheRepository repository.CacheRepository) def.AuthService {
+func NewService(
+	authRepository repository.AuthRepository,
+	cacheRepository repository.CacheRepository,
+	kafkaProducer kafka.Producer,
+) def.AuthService {
 	return &service{
 		authRepository:  authRepository,
 		cacheRepository: cacheRepository,
+		kafkaProducer:   kafkaProducer,
 	}
 }
 
@@ -28,6 +35,8 @@ func NewMockService(deps ...interface{}) def.AuthService {
 			srv.authRepository = s
 		case repository.CacheRepository:
 			srv.cacheRepository = s
+		case kafka.Producer:
+			srv.kafkaProducer = s
 		}
 	}
 
