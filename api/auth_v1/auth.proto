@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+package auth_v1;
+
+option go_package = "github.com/algol-84/user/pkg/auth_v1;auth_v1";
+
+service AuthV1 {
+  rpc Login (LoginRequest) returns (LoginResponse);
+  // Ручка получения рефреш токена
+  rpc GetRefreshToken (GetRefreshTokenRequest) returns (GetRefreshTokenResponse);
+  // Ручка получения акцесс токена
+  rpc GetAccessToken (GetAccessTokenRequest) returns (GetAccessTokenResponse);
+}
+
+// Один раз передаем юзера для которого надо выпустить рефреш токен
+message LoginRequest {
+  string username = 1;
+  string password = 2;
+}
+
+// Возвращает рефреш токен 
+message LoginResponse {
+  string refresh_token = 1;
+}
+
+// Перевыпускает рефреш токен на основе старого рефреш токена
+message GetRefreshTokenRequest {
+  string old_refresh_token = 1;
+}
+
+// Возвращает рефреш токен  
+message GetRefreshTokenResponse {
+  string refresh_token = 1;
+}
+
+// Запрос акцесс токена
+message GetAccessTokenRequest {
+  string refresh_token = 1;
+}
+
+// Возвращает акцесс токен
+message GetAccessTokenResponse {
+  string access_token = 1;
+}

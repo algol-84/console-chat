@@ -6,7 +6,8 @@ import (
 
 	redigo "github.com/gomodule/redigo/redis"
 
-	"github.com/algol-84/auth/internal/api/auth"
+	authApi "github.com/algol-84/auth/internal/api/auth"
+	userApi "github.com/algol-84/auth/internal/api/user"
 	"github.com/algol-84/auth/internal/client/cache"
 	"github.com/algol-84/auth/internal/client/cache/redis"
 	"github.com/algol-84/auth/internal/client/kafka"
@@ -17,6 +18,7 @@ import (
 	authRepositoryRedis "github.com/algol-84/auth/internal/repository/auth/redis"
 	"github.com/algol-84/auth/internal/service"
 	authService "github.com/algol-84/auth/internal/service/auth"
+	userService "github.com/algol-84/auth/internal/service/user"
 	closer "github.com/algol-84/platform_common/pkg/closer"
 	db "github.com/algol-84/platform_common/pkg/db"
 	pg "github.com/algol-84/platform_common/pkg/db/pg"
@@ -36,9 +38,11 @@ type serviceProvider struct {
 	authRepository  repository.AuthRepository
 	cacheRepository repository.CacheRepository
 
+	userService service.UserService
 	authService service.AuthService
 
-	authImpl *auth.Implementation
+	userImpl *userApi.Implementation
+	authImpl *authApi.Implementation
 }
 
 func newServiceProvider() *serviceProvider {
@@ -167,17 +171,33 @@ func (s *serviceProvider) CacheRepository(_ context.Context) repository.CacheRep
 	return s.cacheRepository
 }
 
+func (s *serviceProvider) UserService(ctx context.Context) service.UserService {
+	if s.userService == nil {
+		s.userService = userService.NewService(s.AuthRepository(ctx), s.CacheRepository(ctx), s.KafkaProducer())
+	}
+
+	return s.userService
+}
+
 func (s *serviceProvider) AuthService(ctx context.Context) service.AuthService {
 	if s.authService == nil {
-		s.authService = authService.NewService(s.AuthRepository(ctx), s.CacheRepository(ctx), s.KafkaProducer())
+		s.authService = authService.NewService(s.AuthRepository(ctx))
 	}
 
 	return s.authService
 }
 
-func (s *serviceProvider) AuthImpl(ctx context.Context) *auth.Implementation {
+func (s *serviceProvider) UserImpl(ctx context.Context) *userApi.Implementation {
+	if s.userImpl == nil {
+		s.userImpl = userApi.NewImplementation(s.UserService(ctx))
+	}
+
+	return s.userImpl
+}
+
+func (s *serviceProvider) AuthImpl(ctx context.Context) *authApi.Implementation {
 	if s.authImpl == nil {
-		s.authImpl = auth.NewImplementation(s.AuthService(ctx))
+		s.authImpl = authApi.NewImplementation(s.AuthService(ctx))
 	}
 
 	return s.authImpl

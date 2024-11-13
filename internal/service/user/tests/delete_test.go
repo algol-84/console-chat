@@ -11,7 +11,7 @@ import (
 
 	"github.com/algol-84/auth/internal/repository"
 	repoMocks "github.com/algol-84/auth/internal/repository/mocks"
-	"github.com/algol-84/auth/internal/service/auth"
+	auth "github.com/algol-84/auth/internal/service/user"
 )
 
 func TestDelete(t *testing.T) {

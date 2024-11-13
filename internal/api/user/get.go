@@ -12,7 +12,7 @@ import (
 
 // Get обрабатывает GRPC запросы на получение данных пользователя
 func (i *Implementation) Get(ctx context.Context, req *desc.GetRequest) (*desc.GetResponse, error) {
-	user, err := i.authService.Get(ctx, req.Id)
+	user, err := i.userService.Get(ctx, req.Id)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "the request for user data in the DB returned with error")
 	}

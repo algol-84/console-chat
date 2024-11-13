@@ -11,63 +11,32 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
-	"google.golang.org/protobuf/types/known/wrapperspb"
 
-	"github.com/algol-84/auth/internal/api/auth"
-	"github.com/algol-84/auth/internal/model"
+	auth "github.com/algol-84/auth/internal/api/user"
 	"github.com/algol-84/auth/internal/service"
 	serviceMocks "github.com/algol-84/auth/internal/service/mocks"
 	desc "github.com/algol-84/auth/pkg/user_v1"
 )
 
-func TestUpdate(t *testing.T) {
+func TestDelete(t *testing.T) {
 	t.Parallel()
 	// mc - служебный объект minimock
-	type authServiceMockFunc func(mc *minimock.Controller) service.AuthService
+	type authServiceMockFunc func(mc *minimock.Controller) service.UserService
 
 	type args struct {
 		ctx context.Context
-		req *desc.UpdateRequest
+		req *desc.DeleteRequest
 	}
 
 	var (
 		ctx = context.Background()
 		mc  = minimock.NewController(t)
 
-		id    = gofakeit.Int64()
-		name  = gofakeit.Name()
-		email = gofakeit.Email()
-		role  = "USER"
+		id         = gofakeit.Int64()
+		serviceErr = status.Errorf(codes.Internal, "removing user from the DB returned with an error")
 
-		serviceErr = status.Errorf(codes.Internal, "updating user in the DB returned with an error")
-
-		req = &desc.UpdateRequest{
-			UserUpdate: &desc.UserUpdate{
-				Id: id,
-				Name: &wrapperspb.StringValue{
-					Value: name,
-				},
-				Email: &wrapperspb.StringValue{
-					Value: email,
-				},
-				Role: desc.Role_USER,
-			},
-		}
-
-		user = &model.UserUpdate{
-			ID: id,
-			Name: model.StringValue{
-				Value: name,
-				Valid: true,
-			},
-			Email: model.StringValue{
-				Value: email,
-				Valid: true,
-			},
-			Role: model.StringValue{
-				Value: role,
-				Valid: true,
-			},
+		req = &desc.DeleteRequest{
+			Id: id,
 		}
 
 		res = &empty.Empty{}
@@ -90,9 +59,9 @@ func TestUpdate(t *testing.T) {
 			},
 			want: res,
 			err:  nil,
-			authServiceMock: func(mc *minimock.Controller) service.AuthService {
-				mock := serviceMocks.NewAuthServiceMock(mc)
-				mock.UpdateMock.Expect(ctx, user).Return(nil)
+			authServiceMock: func(mc *minimock.Controller) service.UserService {
+				mock := serviceMocks.NewUserServiceMock(mc)
+				mock.DeleteMock.Expect(ctx, id).Return(nil)
 				return mock
 			},
 		},
@@ -104,9 +73,9 @@ func TestUpdate(t *testing.T) {
 			},
 			want: nil,
 			err:  serviceErr,
-			authServiceMock: func(mc *minimock.Controller) service.AuthService {
-				mock := serviceMocks.NewAuthServiceMock(mc)
-				mock.UpdateMock.Expect(ctx, user).Return(serviceErr)
+			authServiceMock: func(mc *minimock.Controller) service.UserService {
+				mock := serviceMocks.NewUserServiceMock(mc)
+				mock.DeleteMock.Expect(ctx, id).Return(serviceErr)
 				return mock
 			},
 		},
@@ -120,7 +89,7 @@ func TestUpdate(t *testing.T) {
 			authServiceMock := tt.authServiceMock(mc)
 			api := auth.NewImplementation(authServiceMock)
 
-			newID, err := api.Update(tt.args.ctx, tt.args.req)
+			newID, err := api.Delete(tt.args.ctx, tt.args.req)
 			require.Equal(t, tt.err, err)
 			require.Equal(t, tt.want, newID)
 		})
