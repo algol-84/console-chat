@@ -6,6 +6,7 @@ import (
 
 	redigo "github.com/gomodule/redigo/redis"
 
+	accessApi "github.com/algol-84/auth/internal/api/access"
 	authApi "github.com/algol-84/auth/internal/api/auth"
 	userApi "github.com/algol-84/auth/internal/api/user"
 	"github.com/algol-84/auth/internal/client/cache"
@@ -17,6 +18,7 @@ import (
 	authRepositoryPg "github.com/algol-84/auth/internal/repository/auth/pg"
 	authRepositoryRedis "github.com/algol-84/auth/internal/repository/auth/redis"
 	"github.com/algol-84/auth/internal/service"
+	accessService "github.com/algol-84/auth/internal/service/access"
 	authService "github.com/algol-84/auth/internal/service/auth"
 	userService "github.com/algol-84/auth/internal/service/user"
 	closer "github.com/algol-84/platform_common/pkg/closer"
@@ -38,11 +40,13 @@ type serviceProvider struct {
 	authRepository  repository.AuthRepository
 	cacheRepository repository.CacheRepository
 
-	userService service.UserService
-	authService service.AuthService
+	userService   service.UserService
+	authService   service.AuthService
+	accessService service.AccessService
 
-	userImpl *userApi.Implementation
-	authImpl *authApi.Implementation
+	userImpl   *userApi.Implementation
+	authImpl   *authApi.Implementation
+	accessImpl *accessApi.Implementation
 }
 
 func newServiceProvider() *serviceProvider {
@@ -187,6 +191,14 @@ func (s *serviceProvider) AuthService(ctx context.Context) service.AuthService {
 	return s.authService
 }
 
+func (s *serviceProvider) AccessService(ctx context.Context) service.AccessService {
+	if s.accessService == nil {
+		s.accessService = accessService.NewService(s.AuthRepository(ctx))
+	}
+
+	return s.accessService
+}
+
 func (s *serviceProvider) UserImpl(ctx context.Context) *userApi.Implementation {
 	if s.userImpl == nil {
 		s.userImpl = userApi.NewImplementation(s.UserService(ctx))
@@ -201,4 +213,12 @@ func (s *serviceProvider) AuthImpl(ctx context.Context) *authApi.Implementation 
 	}
 
 	return s.authImpl
+}
+
+func (s *serviceProvider) AccessImpl(ctx context.Context) *accessApi.Implementation {
+	if s.accessImpl == nil {
+		s.accessImpl = accessApi.NewImplementation(s.AccessService(ctx))
+	}
+
+	return s.accessImpl
 }

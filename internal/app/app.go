@@ -11,6 +11,7 @@ import (
 	"google.golang.org/grpc/reflection"
 
 	"github.com/algol-84/auth/internal/config"
+	descAccess "github.com/algol-84/auth/pkg/access_v1"
 	descAuth "github.com/algol-84/auth/pkg/auth_v1"
 	descUser "github.com/algol-84/auth/pkg/user_v1"
 	closer "github.com/algol-84/platform_common/pkg/closer"
@@ -89,6 +90,7 @@ func (a *App) initGRPCServer(ctx context.Context) error {
 
 	descUser.RegisterUserV1Server(a.grpcServer, a.serviceProvider.UserImpl(ctx))
 	descAuth.RegisterAuthV1Server(a.grpcServer, a.serviceProvider.AuthImpl(ctx))
+	descAccess.RegisterAccessV1Server(a.grpcServer, a.serviceProvider.AccessImpl(ctx))
 
 	return nil
 }

@@ -14,7 +14,12 @@ type UserService interface {
 	Delete(ctx context.Context, id int64) error
 }
 
-// AuthService интерфейс сервиса авторизации
+// AuthService интерфейс сервиса аутентификации
 type AuthService interface {
 	Login(ctx context.Context) error
+}
+
+// AccessService интерфейс сервиса авторизации
+type AccessService interface {
+	Check(ctx context.Context) error
 }
