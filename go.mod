@@ -7,8 +7,9 @@ require (
 	github.com/Masterminds/squirrel v1.5.4
 	github.com/algol-84/platform_common v1.0.1
 	github.com/brianvoe/gofakeit/v6 v6.28.0
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/gojuno/minimock/v3 v3.4.1
-	github.com/golang/protobuf v1.5.0
+	github.com/golang/protobuf v1.5.3
 	github.com/gomodule/redigo v1.9.2
 	github.com/joho/godotenv v1.5.1
 	github.com/pkg/errors v0.9.1

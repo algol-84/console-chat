@@ -56,16 +56,12 @@ func (r *repo) Get(ctx context.Context, id int64) (*model.User, error) {
 	return converter.ToUserFromRepo(&user), nil
 }
 
-// func (r *repo) Update(_ context.Context, _ *model.UserUpdate) error {
-// 	return nil
-// }
-
+// Delete удаляет юзера из кэша
 func (r *repo) Delete(ctx context.Context, id int64) error {
 	idStr := strconv.FormatInt(id, 10)
 
 	err := r.cl.Del(ctx, idStr)
 	if err != nil {
-		//return err
 		return errors.New("deletion error")
 	}
 

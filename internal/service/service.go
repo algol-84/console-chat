@@ -16,7 +16,9 @@ type UserService interface {
 
 // AuthService интерфейс сервиса аутентификации
 type AuthService interface {
-	Login(ctx context.Context) error
+	Login(ctx context.Context, username string, password string) (string, error)
+	GetAccessToken(ctx context.Context, refreshToken string) (string, error)
+	GetRefreshToken(ctx context.Context, refreshToken string) (string, error)
 }
 
 // AccessService интерфейс сервиса авторизации

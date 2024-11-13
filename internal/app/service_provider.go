@@ -55,6 +55,10 @@ func newServiceProvider() *serviceProvider {
 
 // Определяются функции инициализации всех объектов
 
+func (s *serviceProvider) TokenConfig() {
+	
+}
+
 // PGConfig инициализирует считывание настроек PG из файла конфига
 func (s *serviceProvider) PGConfig() config.PGConfig {
 	if s.pgConfig == nil {

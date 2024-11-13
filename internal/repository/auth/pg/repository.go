@@ -159,3 +159,28 @@ func (r *repo) Delete(ctx context.Context, id int64) error {
 
 	return nil
 }
+
+func (r *repo) Find(ctx context.Context, username string) (*model.User, error) {
+	builderQuery := sq.Select(fieldID, fieldName, fieldEmail, fieldRole, fieldPassword, fieldCreatedAt, fieldUpdatedAt).
+		From(table).
+		PlaceholderFormat(sq.Dollar).
+		Where(sq.Eq{fieldName: username})
+
+	query, args, err := builderQuery.ToSql()
+	if err != nil {
+		return nil, err
+	}
+
+	q := db.Query{
+		Name:     "auth_repository.Find",
+		QueryRaw: query,
+	}
+
+	var user modelRepo.User
+	err = r.db.DB().ScanOneContext(ctx, &user, q, args...)
+	if err != nil {
+		return nil, err
+	}
+
+	return converter.ToUserFromRepo(&user), nil
+}
