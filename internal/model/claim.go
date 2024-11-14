@@ -8,8 +8,9 @@ const (
 
 type UserClaims struct {
 	// Стандартная структура JWT Claims из RFC
-	jwt.StandardClaims		
+	jwt.StandardClaims
 	// Наши кастомные поля, которые мы хотим встроить
+	ID       int64  `json:"id"`
 	Username string `json:"username"`
 	Role     string `json:"role"`
 }

@@ -32,6 +32,7 @@ type serviceProvider struct {
 	grpcConfig          config.GRPCConfig
 	redisConfig         config.RedisConfig
 	kafkaProducerConfig config.KafkaProducerConfig
+	tokenConfig         config.TokenConfig
 
 	kafkaProducer   kafka.Producer
 	dbClient        db.Client
@@ -55,8 +56,17 @@ func newServiceProvider() *serviceProvider {
 
 // Определяются функции инициализации всех объектов
 
-func (s *serviceProvider) TokenConfig() {
-	
+func (s *serviceProvider) TokenConfig() config.TokenConfig {
+	if s.tokenConfig == nil {
+		cfg, err := config.NewTokenConfig()
+		if err != nil {
+			log.Fatalf("failed to get token config: %s", err.Error())
+		}
+
+		s.tokenConfig = cfg
+	}
+
+	return s.tokenConfig
 }
 
 // PGConfig инициализирует считывание настроек PG из файла конфига
@@ -189,7 +199,7 @@ func (s *serviceProvider) UserService(ctx context.Context) service.UserService {
 
 func (s *serviceProvider) AuthService(ctx context.Context) service.AuthService {
 	if s.authService == nil {
-		s.authService = authService.NewService(s.AuthRepository(ctx))
+		s.authService = authService.NewService(s.TokenConfig(), s.AuthRepository(ctx), s.CacheRepository(ctx))
 	}
 
 	return s.authService

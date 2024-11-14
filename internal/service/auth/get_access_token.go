@@ -2,7 +2,7 @@ package auth
 
 import (
 	"context"
-	"errors"
+	"log"
 
 	"github.com/algol-84/auth/internal/model"
 	"github.com/algol-84/auth/internal/utils"
@@ -10,21 +10,24 @@ import (
 
 // GetAccessToken возвращает акцесс токен
 func (s *service) GetAccessToken(ctx context.Context, refreshToken string) (string, error) {
-
-	claims, err := utils.VerifyToken(refreshToken, []byte(refreshTokenSecretKey))
+	claims, err := utils.VerifyToken(refreshToken, []byte(s.tokenConfig.RefreshToken()))
 	if err != nil {
-		return "", errors.New("invalid refresh token")
+		return "", model.ErrorRefreshToken
 	}
 
-	// TODO пойти в кэш и найти юзера
+	// Ищем пользователя в кэше для заполнения роли в клэйме
+	user, err := s.cacheRepository.Get(ctx, claims.ID)
+	if err != nil {
+		return "", model.ErrorUserNotFound
+	}
+	log.Println(user)
 
 	accessToken, err := utils.GenerateToken(model.UserInfo{
 		Username: claims.Username,
-		// Это пример, в реальности роль должна браться из базы или кэша
-		Role: "admin",
+		Role:     user.Role,
 	},
-		[]byte(accessTokenSecretKey),
-		accessTokenExpiration,
+		[]byte(s.tokenConfig.AccessToken()),
+		s.tokenConfig.AccessTokenExpiration(),
 	)
 	if err != nil {
 		return "", err

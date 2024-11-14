@@ -17,6 +17,7 @@ func GenerateToken(info model.UserInfo, secretKey []byte, duration time.Duration
 			// Инициализация стандартных клэймов
 			ExpiresAt: time.Now().Add(duration).Unix(),
 		},
+		ID:       info.ID,
 		Username: info.Username,
 		Role:     info.Role,
 	}

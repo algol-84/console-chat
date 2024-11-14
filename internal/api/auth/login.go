@@ -10,7 +10,6 @@ import (
 
 // Login ручка получения первичного рефреш токена
 func (i *Implementation) Login(ctx context.Context, req *desc.LoginRequest) (*desc.LoginResponse, error) {
-
 	refreshToken, err := i.authService.Login(ctx, req.Username, req.Password)
 	if err != nil {
 		return nil, status.Errorf(codes.NotFound, "user not found")

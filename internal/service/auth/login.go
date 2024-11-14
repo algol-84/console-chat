@@ -3,8 +3,6 @@ package auth
 import (
 	"context"
 	"errors"
-	"log"
-	"time"
 
 	"github.com/algol-84/auth/internal/model"
 	"github.com/algol-84/auth/internal/utils"
@@ -15,29 +13,34 @@ const (
 	authPrefix = "Bearer "
 
 	// TODO генерировать токены через TLS
-	refreshTokenSecretKey = "W4/X+LLjehdxptt4YgGFCvMpq5ewptpZZYRHY6A72g0="
-	accessTokenSecretKey  = "VqvguGiffXILza1f44TWXowDT4zwf03dtXmqWW4SYyE="
+	// refreshTokenSecretKey = "W4/X+LLjehdxptt4YgGFCvMpq5ewptpZZYRHY6A72g0="
+	// accessTokenSecretKey  = "VqvguGiffXILza1f44TWXowDT4zwf03dtXmqWW4SYyE="
 
-	refreshTokenExpiration = 60 * time.Minute
-	accessTokenExpiration  = 5 * time.Minute
+	//refreshTokenExpiration = 60 * time.Minute
+	//accessTokenExpiration = 5 * time.Minute
 )
 
 func (s *service) Login(ctx context.Context, username string, password string) (string, error) {
-	log.Println("login handle in service layer", username, password)
 	// Найти юзера по имени в базе
 	user, err := s.authRepository.Find(ctx, username)
 	if err != nil {
 		return "", errors.New("user not found")
 	}
 
-	log.Println(user)
+	// Добавить юзера в кэш
+	_, err = s.cacheRepository.Create(ctx, user)
+	if err != nil {
+		return "", model.ErrorCacheInternal
+	}
+
 	// Генерируем токен для конкретного юзера из базы
 	refreshToken, err := utils.GenerateToken(model.UserInfo{
+		ID:       user.ID,
 		Username: user.Name,
-		Role: user.Role,
+		Role:     user.Role,
 	},
-		[]byte(refreshTokenSecretKey),
-		refreshTokenExpiration,
+		[]byte(s.tokenConfig.RefreshToken()),
+		s.tokenConfig.RefreshTokenExpiration(),
 	)
 	if err != nil {
 		return "", errors.New("failed to generate token")
