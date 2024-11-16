@@ -23,5 +23,5 @@ type AuthService interface {
 
 // AccessService интерфейс сервиса авторизации
 type AccessService interface {
-	Check(ctx context.Context) error
+	Check(ctx context.Context, endpoint string) error
 }

@@ -15,6 +15,7 @@ import (
 	"github.com/algol-84/auth/internal/client/kafka/producer"
 	"github.com/algol-84/auth/internal/config"
 	"github.com/algol-84/auth/internal/repository"
+	accessRepositoryPg "github.com/algol-84/auth/internal/repository/access/pg"
 	authRepositoryPg "github.com/algol-84/auth/internal/repository/auth/pg"
 	authRepositoryRedis "github.com/algol-84/auth/internal/repository/auth/redis"
 	"github.com/algol-84/auth/internal/service"
@@ -34,12 +35,13 @@ type serviceProvider struct {
 	kafkaProducerConfig config.KafkaProducerConfig
 	tokenConfig         config.TokenConfig
 
-	kafkaProducer   kafka.Producer
-	dbClient        db.Client
-	redisPool       *redigo.Pool
-	redisClient     cache.RedisClient
-	authRepository  repository.AuthRepository
-	cacheRepository repository.CacheRepository
+	kafkaProducer    kafka.Producer
+	dbClient         db.Client
+	redisPool        *redigo.Pool
+	redisClient      cache.RedisClient
+	authRepository   repository.AuthRepository
+	cacheRepository  repository.CacheRepository
+	accessRepository repository.AccessRepository
 
 	userService   service.UserService
 	authService   service.AuthService
@@ -181,6 +183,14 @@ func (s *serviceProvider) AuthRepository(ctx context.Context) repository.AuthRep
 	return s.authRepository
 }
 
+func (s *serviceProvider) AccessRepository(ctx context.Context) repository.AccessRepository {
+	if s.accessRepository == nil {
+		s.accessRepository = accessRepositoryPg.NewRepository(s.DBClient(ctx))
+	}
+
+	return s.accessRepository
+}
+
 func (s *serviceProvider) CacheRepository(_ context.Context) repository.CacheRepository {
 	if s.cacheRepository == nil {
 		s.cacheRepository = authRepositoryRedis.NewRepository(s.RedisClient())
@@ -207,7 +217,7 @@ func (s *serviceProvider) AuthService(ctx context.Context) service.AuthService {
 
 func (s *serviceProvider) AccessService(ctx context.Context) service.AccessService {
 	if s.accessService == nil {
-		s.accessService = accessService.NewService(s.AuthRepository(ctx))
+		s.accessService = accessService.NewService(s.TokenConfig(), s.AuthRepository(ctx), s.AccessRepository(ctx))
 	}
 
 	return s.accessService
