@@ -17,7 +17,7 @@ import (
 	"github.com/algol-84/chat-server/internal/config"
 	"github.com/algol-84/chat-server/internal/interceptor"
 	desc "github.com/algol-84/chat-server/pkg/chat_v1"
-	_ "github.com/algol-84/chat-server/statik"
+	_ "github.com/algol-84/chat-server/statik" // Используется для инициализации статического swagger-сервера
 	closer "github.com/algol-84/platform_common/pkg/closer"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/rakyll/statik/fs"
@@ -130,7 +130,8 @@ func (a *App) initGRPCServer(ctx context.Context) error {
 	a.grpcServer = grpc.NewServer(
 		grpc.Creds(insecure.NewCredentials()),
 		// Задаем интерцептор для grpc сервера
-		grpc.UnaryInterceptor(interceptor.ValidateInterceptor),
+		//	grpc.UnaryInterceptor(interceptor.ValidateInterceptor),
+		grpc.ChainUnaryInterceptor(interceptor.ValidateInterceptor, interceptor.AuthInterceptor),
 	)
 
 	reflection.Register(a.grpcServer)
@@ -182,8 +183,9 @@ func (a *App) initSwaggerServer(_ context.Context) error {
 	mux.HandleFunc("/api.swagger.json", serveSwaggerFile("/api.swagger.json"))
 
 	a.swaggerServer = &http.Server{
-		Addr:    a.serviceProvider.SwaggerConfig().Address(),
-		Handler: mux,
+		Addr:              a.serviceProvider.SwaggerConfig().Address(),
+		Handler:           mux,
+		ReadHeaderTimeout: 5 * time.Second,
 	}
 
 	return nil
@@ -228,7 +230,7 @@ func (a *App) runSwaggerServer() error {
 }
 
 func serveSwaggerFile(path string) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, _ *http.Request) {
 		log.Printf("Serving swagger file: %s", path)
 
 		statikFs, err := fs.New()
@@ -244,7 +246,12 @@ func serveSwaggerFile(path string) http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		defer file.Close()
+		defer func() {
+			err := file.Close()
+			if err != nil {
+				log.Print("Error closing statikFs file")
+			}
+		}()
 
 		log.Printf("Read swagger file: %s", path)
 

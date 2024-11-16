@@ -2,6 +2,8 @@ github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03
 github.com/Masterminds/semver/v3 v3.1.1/go.mod h1:VPu/7SZ7ePZ3QOrcuXROw5FAcLl4a0cBrbBpGY/8hQs=
 github.com/Masterminds/squirrel v1.5.4 h1:uUcX/aBc8O7Fg9kaISIUsHXdKuqehiXAMQTYX8afzqM=
 github.com/Masterminds/squirrel v1.5.4/go.mod h1:NNaOrjSoIDfDA40n7sr2tPNZRfjzjA400rg+riTZj10=
+github.com/algol-84/auth v0.0.0-20241112104200-15791502a705 h1:ng+dDd7ePH5O337Jjha8vhRNozmLFTve0BkAhuVKVHM=
+github.com/algol-84/auth v0.0.0-20241112104200-15791502a705/go.mod h1:ZM+MQcq01Vv0Oq7W31G68IDGa3shTubOc6ievd1I+sA=
 github.com/algol-84/platform_common v1.0.1 h1:HWhEy2UNu7thCkwHC14GAt7Z+9plq6jOW7z3IL50GVQ=
 github.com/algol-84/platform_common v1.0.1/go.mod h1:naQF0fSQBg8WrmMuU35jwAiij8aZLK4ht3UmqZLV9Qw=
 github.com/brianvoe/gofakeit/v6 v6.28.0 h1:Xib46XXuQfmlLS2EXRuJpqcw8St6qSZz75OUo0tgAW4=
