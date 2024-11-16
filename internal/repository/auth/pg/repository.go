@@ -9,6 +9,7 @@ import (
 	"github.com/algol-84/auth/internal/repository"
 	"github.com/algol-84/auth/internal/repository/auth/pg/converter"
 	db "github.com/algol-84/platform_common/pkg/db"
+	"golang.org/x/crypto/bcrypt"
 
 	model "github.com/algol-84/auth/internal/model"
 	modelRepo "github.com/algol-84/auth/internal/repository/auth/pg/model"
@@ -40,11 +41,18 @@ func NewRepository(db db.Client) repository.AuthRepository {
 // Функция возвращает присвоенный в БД ID юзера или ошибку записи
 func (r *repo) Create(ctx context.Context, user *model.User) (int64, error) {
 	var userID int64
+	password := []byte(user.Password)
+	// Генерация хэша пароля cо сложностью по умолчанию
+	passwordHash, err := bcrypt.GenerateFromPassword(password, bcrypt.DefaultCost)
+	if err != nil {
+		return 0, err
+	}
+
 	// Собрать запрос на вставку записи в таблицу
 	builderQuery := sq.Insert(table).
 		PlaceholderFormat(sq.Dollar).
 		Columns(fieldName, fieldPassword, fieldEmail, fieldRole).
-		Values(user.Name, user.Password, user.Email, user.Role).
+		Values(user.Name, passwordHash, user.Email, user.Role).
 		Suffix("RETURNING " + fieldID)
 
 	query, args, err := builderQuery.ToSql()
@@ -160,7 +168,8 @@ func (r *repo) Delete(ctx context.Context, id int64) error {
 	return nil
 }
 
-func (r *repo) Find(ctx context.Context, username string) (*model.User, error) {
+// Find находит пользователя username в базе и валидирует пароля
+func (r *repo) Find(ctx context.Context, username string, password string) (*model.User, error) {
 	builderQuery := sq.Select(fieldID, fieldName, fieldEmail, fieldRole, fieldPassword, fieldCreatedAt, fieldUpdatedAt).
 		From(table).
 		PlaceholderFormat(sq.Dollar).
@@ -180,6 +189,12 @@ func (r *repo) Find(ctx context.Context, username string) (*model.User, error) {
 	err = r.db.DB().ScanOneContext(ctx, &user, q, args...)
 	if err != nil {
 		return nil, err
+	}
+
+	// Проверка пароля
+	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
+	if err != nil {
+		return nil, fmt.Errorf("wrong password")
 	}
 
 	return converter.ToUserFromRepo(&user), nil

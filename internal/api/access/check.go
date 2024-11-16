@@ -13,7 +13,7 @@ import (
 func (i *Implementation) Check(ctx context.Context, req *desc.CheckRequest) (*emptypb.Empty, error) {
 	err := i.accessService.Check(ctx, req.GetEndpointAddress())
 	if err != nil {
-		return nil, status.Errorf(codes.NotFound, "check error")
+		return nil, status.Errorf(codes.NotFound, err.Error())
 	}
 	return &emptypb.Empty{}, nil
 }

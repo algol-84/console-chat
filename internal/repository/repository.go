@@ -19,7 +19,7 @@ type AuthRepository interface {
 	Get(ctx context.Context, id int64) (*model.User, error)
 	Update(ctx context.Context, user *model.UserUpdate) error
 	Delete(ctx context.Context, id int64) error
-	Find(ctx context.Context, username string) (*model.User, error)
+	Find(ctx context.Context, username string, password string) (*model.User, error)
 }
 
 // CacheRepository интерфейс реализует репо слой кэша

@@ -33,9 +33,9 @@ type AuthRepositoryMock struct {
 	beforeDeleteCounter uint64
 	DeleteMock          mAuthRepositoryMockDelete
 
-	funcFind          func(ctx context.Context, username string) (up1 *model.User, err error)
+	funcFind          func(ctx context.Context, username string, password string) (up1 *model.User, err error)
 	funcFindOrigin    string
-	inspectFuncFind   func(ctx context.Context, username string)
+	inspectFuncFind   func(ctx context.Context, username string, password string)
 	afterFindCounter  uint64
 	beforeFindCounter uint64
 	FindMock          mAuthRepositoryMockFind
@@ -796,12 +796,14 @@ type AuthRepositoryMockFindExpectation struct {
 type AuthRepositoryMockFindParams struct {
 	ctx      context.Context
 	username string
+	password string
 }
 
 // AuthRepositoryMockFindParamPtrs contains pointers to parameters of the AuthRepository.Find
 type AuthRepositoryMockFindParamPtrs struct {
 	ctx      *context.Context
 	username *string
+	password *string
 }
 
 // AuthRepositoryMockFindResults contains results of the AuthRepository.Find
@@ -815,6 +817,7 @@ type AuthRepositoryMockFindExpectationOrigins struct {
 	origin         string
 	originCtx      string
 	originUsername string
+	originPassword string
 }
 
 // Marks this method to be optional. The default behavior of any method with Return() is '1 or more', meaning
@@ -828,7 +831,7 @@ func (mmFind *mAuthRepositoryMockFind) Optional() *mAuthRepositoryMockFind {
 }
 
 // Expect sets up expected params for AuthRepository.Find
-func (mmFind *mAuthRepositoryMockFind) Expect(ctx context.Context, username string) *mAuthRepositoryMockFind {
+func (mmFind *mAuthRepositoryMockFind) Expect(ctx context.Context, username string, password string) *mAuthRepositoryMockFind {
 	if mmFind.mock.funcFind != nil {
 		mmFind.mock.t.Fatalf("AuthRepositoryMock.Find mock is already set by Set")
 	}
@@ -841,7 +844,7 @@ func (mmFind *mAuthRepositoryMockFind) Expect(ctx context.Context, username stri
 		mmFind.mock.t.Fatalf("AuthRepositoryMock.Find mock is already set by ExpectParams functions")
 	}
 
-	mmFind.defaultExpectation.params = &AuthRepositoryMockFindParams{ctx, username}
+	mmFind.defaultExpectation.params = &AuthRepositoryMockFindParams{ctx, username, password}
 	mmFind.defaultExpectation.expectationOrigins.origin = minimock.CallerInfo(1)
 	for _, e := range mmFind.expectations {
 		if minimock.Equal(e.params, mmFind.defaultExpectation.params) {
@@ -898,8 +901,31 @@ func (mmFind *mAuthRepositoryMockFind) ExpectUsernameParam2(username string) *mA
 	return mmFind
 }
 
+// ExpectPasswordParam3 sets up expected param password for AuthRepository.Find
+func (mmFind *mAuthRepositoryMockFind) ExpectPasswordParam3(password string) *mAuthRepositoryMockFind {
+	if mmFind.mock.funcFind != nil {
+		mmFind.mock.t.Fatalf("AuthRepositoryMock.Find mock is already set by Set")
+	}
+
+	if mmFind.defaultExpectation == nil {
+		mmFind.defaultExpectation = &AuthRepositoryMockFindExpectation{}
+	}
+
+	if mmFind.defaultExpectation.params != nil {
+		mmFind.mock.t.Fatalf("AuthRepositoryMock.Find mock is already set by Expect")
+	}
+
+	if mmFind.defaultExpectation.paramPtrs == nil {
+		mmFind.defaultExpectation.paramPtrs = &AuthRepositoryMockFindParamPtrs{}
+	}
+	mmFind.defaultExpectation.paramPtrs.password = &password
+	mmFind.defaultExpectation.expectationOrigins.originPassword = minimock.CallerInfo(1)
+
+	return mmFind
+}
+
 // Inspect accepts an inspector function that has same arguments as the AuthRepository.Find
-func (mmFind *mAuthRepositoryMockFind) Inspect(f func(ctx context.Context, username string)) *mAuthRepositoryMockFind {
+func (mmFind *mAuthRepositoryMockFind) Inspect(f func(ctx context.Context, username string, password string)) *mAuthRepositoryMockFind {
 	if mmFind.mock.inspectFuncFind != nil {
 		mmFind.mock.t.Fatalf("Inspect function is already set for AuthRepositoryMock.Find")
 	}
@@ -924,7 +950,7 @@ func (mmFind *mAuthRepositoryMockFind) Return(up1 *model.User, err error) *AuthR
 }
 
 // Set uses given function f to mock the AuthRepository.Find method
-func (mmFind *mAuthRepositoryMockFind) Set(f func(ctx context.Context, username string) (up1 *model.User, err error)) *AuthRepositoryMock {
+func (mmFind *mAuthRepositoryMockFind) Set(f func(ctx context.Context, username string, password string) (up1 *model.User, err error)) *AuthRepositoryMock {
 	if mmFind.defaultExpectation != nil {
 		mmFind.mock.t.Fatalf("Default expectation is already set for the AuthRepository.Find method")
 	}
@@ -940,14 +966,14 @@ func (mmFind *mAuthRepositoryMockFind) Set(f func(ctx context.Context, username 
 
 // When sets expectation for the AuthRepository.Find which will trigger the result defined by the following
 // Then helper
-func (mmFind *mAuthRepositoryMockFind) When(ctx context.Context, username string) *AuthRepositoryMockFindExpectation {
+func (mmFind *mAuthRepositoryMockFind) When(ctx context.Context, username string, password string) *AuthRepositoryMockFindExpectation {
 	if mmFind.mock.funcFind != nil {
 		mmFind.mock.t.Fatalf("AuthRepositoryMock.Find mock is already set by Set")
 	}
 
 	expectation := &AuthRepositoryMockFindExpectation{
 		mock:               mmFind.mock,
-		params:             &AuthRepositoryMockFindParams{ctx, username},
+		params:             &AuthRepositoryMockFindParams{ctx, username, password},
 		expectationOrigins: AuthRepositoryMockFindExpectationOrigins{origin: minimock.CallerInfo(1)},
 	}
 	mmFind.expectations = append(mmFind.expectations, expectation)
@@ -982,17 +1008,17 @@ func (mmFind *mAuthRepositoryMockFind) invocationsDone() bool {
 }
 
 // Find implements mm_repository.AuthRepository
-func (mmFind *AuthRepositoryMock) Find(ctx context.Context, username string) (up1 *model.User, err error) {
+func (mmFind *AuthRepositoryMock) Find(ctx context.Context, username string, password string) (up1 *model.User, err error) {
 	mm_atomic.AddUint64(&mmFind.beforeFindCounter, 1)
 	defer mm_atomic.AddUint64(&mmFind.afterFindCounter, 1)
 
 	mmFind.t.Helper()
 
 	if mmFind.inspectFuncFind != nil {
-		mmFind.inspectFuncFind(ctx, username)
+		mmFind.inspectFuncFind(ctx, username, password)
 	}
 
-	mm_params := AuthRepositoryMockFindParams{ctx, username}
+	mm_params := AuthRepositoryMockFindParams{ctx, username, password}
 
 	// Record call args
 	mmFind.FindMock.mutex.Lock()
@@ -1011,7 +1037,7 @@ func (mmFind *AuthRepositoryMock) Find(ctx context.Context, username string) (up
 		mm_want := mmFind.FindMock.defaultExpectation.params
 		mm_want_ptrs := mmFind.FindMock.defaultExpectation.paramPtrs
 
-		mm_got := AuthRepositoryMockFindParams{ctx, username}
+		mm_got := AuthRepositoryMockFindParams{ctx, username, password}
 
 		if mm_want_ptrs != nil {
 
@@ -1023,6 +1049,11 @@ func (mmFind *AuthRepositoryMock) Find(ctx context.Context, username string) (up
 			if mm_want_ptrs.username != nil && !minimock.Equal(*mm_want_ptrs.username, mm_got.username) {
 				mmFind.t.Errorf("AuthRepositoryMock.Find got unexpected parameter username, expected at\n%s:\nwant: %#v\n got: %#v%s\n",
 					mmFind.FindMock.defaultExpectation.expectationOrigins.originUsername, *mm_want_ptrs.username, mm_got.username, minimock.Diff(*mm_want_ptrs.username, mm_got.username))
+			}
+
+			if mm_want_ptrs.password != nil && !minimock.Equal(*mm_want_ptrs.password, mm_got.password) {
+				mmFind.t.Errorf("AuthRepositoryMock.Find got unexpected parameter password, expected at\n%s:\nwant: %#v\n got: %#v%s\n",
+					mmFind.FindMock.defaultExpectation.expectationOrigins.originPassword, *mm_want_ptrs.password, mm_got.password, minimock.Diff(*mm_want_ptrs.password, mm_got.password))
 			}
 
 		} else if mm_want != nil && !minimock.Equal(*mm_want, mm_got) {
@@ -1037,9 +1068,9 @@ func (mmFind *AuthRepositoryMock) Find(ctx context.Context, username string) (up
 		return (*mm_results).up1, (*mm_results).err
 	}
 	if mmFind.funcFind != nil {
-		return mmFind.funcFind(ctx, username)
+		return mmFind.funcFind(ctx, username, password)
 	}
-	mmFind.t.Fatalf("Unexpected call to AuthRepositoryMock.Find. %v %v", ctx, username)
+	mmFind.t.Fatalf("Unexpected call to AuthRepositoryMock.Find. %v %v %v", ctx, username, password)
 	return
 }
 

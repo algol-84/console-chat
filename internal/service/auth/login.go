@@ -8,9 +8,9 @@ import (
 	"github.com/algol-84/auth/internal/utils"
 )
 
-func (s *service) Login(ctx context.Context, username string, _ string) (string, error) {
+func (s *service) Login(ctx context.Context, username string, password string) (string, error) {
 	// Найти юзера по имени в базе
-	user, err := s.authRepository.Find(ctx, username)
+	user, err := s.authRepository.Find(ctx, username, password)
 	if err != nil {
 		return "", errors.New("user not found")
 	}
