@@ -98,7 +98,7 @@ func TestGet(t *testing.T) {
 			authRepositoryMock: func(mc *minimock.Controller) repository.AuthRepository {
 				mock := repoMocks.NewAuthRepositoryMock(mc)
 				// Ожидаем получение юзера из базы
-				mock.GetMock.Expect(ctx, id).Return(res, nil)
+				mock.GetMock.Expect(ctx, &repository.Filter{ID: id}).Return(res, nil)
 				return mock
 			},
 		},
@@ -113,7 +113,7 @@ func TestGet(t *testing.T) {
 			// Ожидаем ошибку что юзер не найден в базе
 			authRepositoryMock: func(mc *minimock.Controller) repository.AuthRepository {
 				mock := repoMocks.NewAuthRepositoryMock(mc)
-				mock.GetMock.Expect(ctx, id).Return(nil, model.ErrorUserNotFound)
+				mock.GetMock.Expect(ctx, &repository.Filter{ID: id}).Return(nil, model.ErrorUserNotFound)
 				return mock
 			},
 			// В кэше юзера тоже нет
@@ -135,7 +135,7 @@ func TestGet(t *testing.T) {
 			authRepositoryMock: func(mc *minimock.Controller) repository.AuthRepository {
 				mock := repoMocks.NewAuthRepositoryMock(mc)
 				// Ожидаем получению юзера из базы
-				mock.GetMock.Expect(ctx, id).Return(res, nil)
+				mock.GetMock.Expect(ctx, &repository.Filter{ID: id}).Return(res, nil)
 				return mock
 			},
 

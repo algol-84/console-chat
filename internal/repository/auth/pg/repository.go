@@ -74,11 +74,18 @@ func (r *repo) Create(ctx context.Context, user *model.User) (int64, error) {
 }
 
 // Get возвращает информацию о юзере по ID
-func (r *repo) Get(ctx context.Context, id int64) (*model.User, error) {
-	builderQuery := sq.Select(fieldID, fieldName, fieldEmail, fieldRole, fieldCreatedAt, fieldUpdatedAt).
+func (r *repo) Get(ctx context.Context, filter *repository.Filter) (*model.User, error) {
+	builderQuery := sq.Select(fieldID, fieldName, fieldEmail, fieldPassword, fieldRole, fieldCreatedAt, fieldUpdatedAt).
 		From(table).
-		PlaceholderFormat(sq.Dollar).
-		Where(sq.Eq{fieldID: id})
+		PlaceholderFormat(sq.Dollar)
+
+	// Добавить заданные фильтры поиска
+	if filter.ID != 0 {
+		builderQuery = builderQuery.Where(sq.Eq{fieldID: filter.ID})
+	}
+	if filter.Username != "" {
+		builderQuery = builderQuery.Where(sq.Eq{fieldName: filter.Username})
+	}
 
 	query, args, err := builderQuery.ToSql()
 	if err != nil {
@@ -166,36 +173,4 @@ func (r *repo) Delete(ctx context.Context, id int64) error {
 	}
 
 	return nil
-}
-
-// Find находит пользователя username в базе и валидирует пароля
-func (r *repo) Find(ctx context.Context, username string, password string) (*model.User, error) {
-	builderQuery := sq.Select(fieldID, fieldName, fieldEmail, fieldRole, fieldPassword, fieldCreatedAt, fieldUpdatedAt).
-		From(table).
-		PlaceholderFormat(sq.Dollar).
-		Where(sq.Eq{fieldName: username})
-
-	query, args, err := builderQuery.ToSql()
-	if err != nil {
-		return nil, err
-	}
-
-	q := db.Query{
-		Name:     "auth_repository.Find",
-		QueryRaw: query,
-	}
-
-	var user modelRepo.User
-	err = r.db.DB().ScanOneContext(ctx, &user, q, args...)
-	if err != nil {
-		return nil, err
-	}
-
-	// Проверка пароля
-	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
-	if err != nil {
-		return nil, fmt.Errorf("wrong password")
-	}
-
-	return converter.ToUserFromRepo(&user), nil
 }

@@ -13,13 +13,18 @@ import (
 	model "github.com/algol-84/auth/internal/model"
 )
 
+// Filter определяет структуру полей для поиска юзеров в базе
+type Filter struct {
+	ID       int64
+	Username string
+}
+
 // AuthRepository интерфейс реализует репо слой User репозитория
 type AuthRepository interface {
 	Create(ctx context.Context, user *model.User) (int64, error)
-	Get(ctx context.Context, id int64) (*model.User, error)
+	Get(ctx context.Context, filter *Filter) (*model.User, error)
 	Update(ctx context.Context, user *model.UserUpdate) error
 	Delete(ctx context.Context, id int64) error
-	Find(ctx context.Context, username string, password string) (*model.User, error)
 }
 
 // CacheRepository интерфейс реализует репо слой кэша

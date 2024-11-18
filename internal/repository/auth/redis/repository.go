@@ -2,7 +2,7 @@ package pg
 
 import (
 	"context"
-	"errors"
+	"fmt"
 	"strconv"
 
 	redigo "github.com/gomodule/redigo/redis"
@@ -62,7 +62,7 @@ func (r *repo) Delete(ctx context.Context, id int64) error {
 
 	err := r.cl.Del(ctx, idStr)
 	if err != nil {
-		return errors.New("deletion error")
+		return fmt.Errorf("deletion error: %s", err.Error())
 	}
 
 	return nil

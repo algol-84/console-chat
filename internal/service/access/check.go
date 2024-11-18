@@ -3,13 +3,13 @@ package auth
 import (
 	"context"
 	"errors"
+	"log"
 	"strings"
 
 	"github.com/algol-84/auth/internal/utils"
 	"google.golang.org/grpc/metadata"
 )
 
-// TODO вынести константы в конфиг
 const (
 	// authPrefix префикс добавляется к токену для идентификации используемого метода аутентификации.
 	// В случае JWT принято добавлять Bearer
@@ -55,6 +55,8 @@ func (s *service) Check(ctx context.Context, endpoint string) error {
 	if role != claims.Role {
 		return errors.New("access denied")
 	}
+
+	log.Printf("access granted for user %s to endpoint %s", claims.Username, endpoint)
 
 	return nil
 }

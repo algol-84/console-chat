@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/algol-84/auth/internal/model"
+	"github.com/algol-84/auth/internal/repository"
 )
 
 func (s *service) Get(ctx context.Context, id int64) (*model.User, error) {
@@ -11,7 +12,7 @@ func (s *service) Get(ctx context.Context, id int64) (*model.User, error) {
 	user, err := s.cacheRepository.Get(ctx, id)
 	if err == model.ErrorUserNotFound {
 		// Запрос юзера из базы
-		user, err = s.authRepository.Get(ctx, id)
+		user, err = s.authRepository.Get(ctx, &repository.Filter{ID: id})
 		if err != nil {
 			return nil, model.ErrorUserNotFound
 		}
