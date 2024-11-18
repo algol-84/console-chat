@@ -2,18 +2,18 @@ package auth
 
 import (
 	"github.com/algol-84/auth/internal/service"
-	descAuth "github.com/algol-84/auth/pkg/auth_v1"
+	descAccess "github.com/algol-84/auth/pkg/access_v1"
 )
 
 // Implementation содержит все объекты сервера
 type Implementation struct {
-	descAuth.UnimplementedAuthV1Server
-	authService service.AuthService
+	descAccess.UnimplementedAccessV1Server
+	accessService service.AccessService
 }
 
 // NewImplementation конструктор API слоя
-func NewImplementation(authService service.AuthService) *Implementation {
+func NewImplementation(accessService service.AccessService) *Implementation {
 	return &Implementation{
-		authService: authService,
+		accessService: accessService,
 	}
 }

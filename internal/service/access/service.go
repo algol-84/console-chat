@@ -7,20 +7,20 @@ import (
 )
 
 type service struct {
-	tokenConfig     config.TokenConfig
-	authRepository  repository.AuthRepository
-	cacheRepository repository.CacheRepository
+	tokenConfig      config.TokenConfig
+	authRepository   repository.AuthRepository
+	accessRepository repository.AccessRepository
 }
 
 // NewService конструктор сервисного слоя
 func NewService(
 	tokenConfig config.TokenConfig,
 	authRepository repository.AuthRepository,
-	cacheRepository repository.CacheRepository,
-) def.AuthService {
+	accessRepository repository.AccessRepository,
+) def.AccessService {
 	return &service{
-		tokenConfig:     tokenConfig,
-		authRepository:  authRepository,
-		cacheRepository: cacheRepository,
+		tokenConfig:      tokenConfig,
+		authRepository:   authRepository,
+		accessRepository: accessRepository,
 	}
 }

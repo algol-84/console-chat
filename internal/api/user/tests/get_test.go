@@ -12,7 +12,7 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	"github.com/algol-84/auth/internal/api/auth"
+	auth "github.com/algol-84/auth/internal/api/user"
 	"github.com/algol-84/auth/internal/converter"
 	"github.com/algol-84/auth/internal/model"
 	"github.com/algol-84/auth/internal/service"
@@ -23,7 +23,7 @@ import (
 func TestGet(t *testing.T) {
 	t.Parallel()
 	// mc - служебный объект minimock
-	type authServiceMockFunc func(mc *minimock.Controller) service.AuthService
+	type authServiceMockFunc func(mc *minimock.Controller) service.UserService
 
 	type args struct {
 		ctx context.Context
@@ -88,8 +88,8 @@ func TestGet(t *testing.T) {
 			},
 			want: res,
 			err:  nil,
-			authServiceMock: func(mc *minimock.Controller) service.AuthService {
-				mock := serviceMocks.NewAuthServiceMock(mc)
+			authServiceMock: func(mc *minimock.Controller) service.UserService {
+				mock := serviceMocks.NewUserServiceMock(mc)
 				mock.GetMock.Expect(ctx, id).Return(serviceRes, nil)
 				return mock
 			},
@@ -102,8 +102,8 @@ func TestGet(t *testing.T) {
 			},
 			want: nil,
 			err:  serviceErr,
-			authServiceMock: func(mc *minimock.Controller) service.AuthService {
-				mock := serviceMocks.NewAuthServiceMock(mc)
+			authServiceMock: func(mc *minimock.Controller) service.UserService {
+				mock := serviceMocks.NewUserServiceMock(mc)
 				mock.GetMock.Expect(ctx, id).Return(&model.User{}, serviceErr)
 				return mock
 			},

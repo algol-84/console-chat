@@ -6,17 +6,22 @@ import (
 
 	redigo "github.com/gomodule/redigo/redis"
 
-	"github.com/algol-84/auth/internal/api/auth"
+	accessApi "github.com/algol-84/auth/internal/api/access"
+	authApi "github.com/algol-84/auth/internal/api/auth"
+	userApi "github.com/algol-84/auth/internal/api/user"
 	"github.com/algol-84/auth/internal/client/cache"
 	"github.com/algol-84/auth/internal/client/cache/redis"
 	"github.com/algol-84/auth/internal/client/kafka"
 	"github.com/algol-84/auth/internal/client/kafka/producer"
 	"github.com/algol-84/auth/internal/config"
 	"github.com/algol-84/auth/internal/repository"
+	accessRepositoryPg "github.com/algol-84/auth/internal/repository/access/pg"
 	authRepositoryPg "github.com/algol-84/auth/internal/repository/auth/pg"
 	authRepositoryRedis "github.com/algol-84/auth/internal/repository/auth/redis"
 	"github.com/algol-84/auth/internal/service"
+	accessService "github.com/algol-84/auth/internal/service/access"
 	authService "github.com/algol-84/auth/internal/service/auth"
+	userService "github.com/algol-84/auth/internal/service/user"
 	closer "github.com/algol-84/platform_common/pkg/closer"
 	db "github.com/algol-84/platform_common/pkg/db"
 	pg "github.com/algol-84/platform_common/pkg/db/pg"
@@ -28,17 +33,23 @@ type serviceProvider struct {
 	grpcConfig          config.GRPCConfig
 	redisConfig         config.RedisConfig
 	kafkaProducerConfig config.KafkaProducerConfig
+	tokenConfig         config.TokenConfig
 
-	kafkaProducer   kafka.Producer
-	dbClient        db.Client
-	redisPool       *redigo.Pool
-	redisClient     cache.RedisClient
-	authRepository  repository.AuthRepository
-	cacheRepository repository.CacheRepository
+	kafkaProducer    kafka.Producer
+	dbClient         db.Client
+	redisPool        *redigo.Pool
+	redisClient      cache.RedisClient
+	authRepository   repository.AuthRepository
+	cacheRepository  repository.CacheRepository
+	accessRepository repository.AccessRepository
 
-	authService service.AuthService
+	userService   service.UserService
+	authService   service.AuthService
+	accessService service.AccessService
 
-	authImpl *auth.Implementation
+	userImpl   *userApi.Implementation
+	authImpl   *authApi.Implementation
+	accessImpl *accessApi.Implementation
 }
 
 func newServiceProvider() *serviceProvider {
@@ -46,6 +57,19 @@ func newServiceProvider() *serviceProvider {
 }
 
 // Определяются функции инициализации всех объектов
+
+func (s *serviceProvider) TokenConfig() config.TokenConfig {
+	if s.tokenConfig == nil {
+		cfg, err := config.NewTokenConfig()
+		if err != nil {
+			log.Fatalf("failed to get token config: %s", err.Error())
+		}
+
+		s.tokenConfig = cfg
+	}
+
+	return s.tokenConfig
+}
 
 // PGConfig инициализирует считывание настроек PG из файла конфига
 func (s *serviceProvider) PGConfig() config.PGConfig {
@@ -159,6 +183,14 @@ func (s *serviceProvider) AuthRepository(ctx context.Context) repository.AuthRep
 	return s.authRepository
 }
 
+func (s *serviceProvider) AccessRepository(ctx context.Context) repository.AccessRepository {
+	if s.accessRepository == nil {
+		s.accessRepository = accessRepositoryPg.NewRepository(s.DBClient(ctx))
+	}
+
+	return s.accessRepository
+}
+
 func (s *serviceProvider) CacheRepository(_ context.Context) repository.CacheRepository {
 	if s.cacheRepository == nil {
 		s.cacheRepository = authRepositoryRedis.NewRepository(s.RedisClient())
@@ -167,18 +199,50 @@ func (s *serviceProvider) CacheRepository(_ context.Context) repository.CacheRep
 	return s.cacheRepository
 }
 
+func (s *serviceProvider) UserService(ctx context.Context) service.UserService {
+	if s.userService == nil {
+		s.userService = userService.NewService(s.AuthRepository(ctx), s.CacheRepository(ctx), s.KafkaProducer())
+	}
+
+	return s.userService
+}
+
 func (s *serviceProvider) AuthService(ctx context.Context) service.AuthService {
 	if s.authService == nil {
-		s.authService = authService.NewService(s.AuthRepository(ctx), s.CacheRepository(ctx), s.KafkaProducer())
+		s.authService = authService.NewService(s.TokenConfig(), s.AuthRepository(ctx), s.CacheRepository(ctx))
 	}
 
 	return s.authService
 }
 
-func (s *serviceProvider) AuthImpl(ctx context.Context) *auth.Implementation {
+func (s *serviceProvider) AccessService(ctx context.Context) service.AccessService {
+	if s.accessService == nil {
+		s.accessService = accessService.NewService(s.TokenConfig(), s.AuthRepository(ctx), s.AccessRepository(ctx))
+	}
+
+	return s.accessService
+}
+
+func (s *serviceProvider) UserImpl(ctx context.Context) *userApi.Implementation {
+	if s.userImpl == nil {
+		s.userImpl = userApi.NewImplementation(s.UserService(ctx))
+	}
+
+	return s.userImpl
+}
+
+func (s *serviceProvider) AuthImpl(ctx context.Context) *authApi.Implementation {
 	if s.authImpl == nil {
-		s.authImpl = auth.NewImplementation(s.AuthService(ctx))
+		s.authImpl = authApi.NewImplementation(s.AuthService(ctx))
 	}
 
 	return s.authImpl
+}
+
+func (s *serviceProvider) AccessImpl(ctx context.Context) *accessApi.Implementation {
+	if s.accessImpl == nil {
+		s.accessImpl = accessApi.NewImplementation(s.AccessService(ctx))
+	}
+
+	return s.accessImpl
 }

@@ -9,6 +9,7 @@ import (
 	"github.com/algol-84/auth/internal/repository"
 	"github.com/algol-84/auth/internal/repository/auth/pg/converter"
 	db "github.com/algol-84/platform_common/pkg/db"
+	"golang.org/x/crypto/bcrypt"
 
 	model "github.com/algol-84/auth/internal/model"
 	modelRepo "github.com/algol-84/auth/internal/repository/auth/pg/model"
@@ -40,11 +41,18 @@ func NewRepository(db db.Client) repository.AuthRepository {
 // Функция возвращает присвоенный в БД ID юзера или ошибку записи
 func (r *repo) Create(ctx context.Context, user *model.User) (int64, error) {
 	var userID int64
+	password := []byte(user.Password)
+	// Генерация хэша пароля cо сложностью по умолчанию
+	passwordHash, err := bcrypt.GenerateFromPassword(password, bcrypt.DefaultCost)
+	if err != nil {
+		return 0, err
+	}
+
 	// Собрать запрос на вставку записи в таблицу
 	builderQuery := sq.Insert(table).
 		PlaceholderFormat(sq.Dollar).
 		Columns(fieldName, fieldPassword, fieldEmail, fieldRole).
-		Values(user.Name, user.Password, user.Email, user.Role).
+		Values(user.Name, passwordHash, user.Email, user.Role).
 		Suffix("RETURNING " + fieldID)
 
 	query, args, err := builderQuery.ToSql()
@@ -66,11 +74,18 @@ func (r *repo) Create(ctx context.Context, user *model.User) (int64, error) {
 }
 
 // Get возвращает информацию о юзере по ID
-func (r *repo) Get(ctx context.Context, id int64) (*model.User, error) {
-	builderQuery := sq.Select(fieldID, fieldName, fieldEmail, fieldRole, fieldCreatedAt, fieldUpdatedAt).
+func (r *repo) Get(ctx context.Context, filter *repository.Filter) (*model.User, error) {
+	builderQuery := sq.Select(fieldID, fieldName, fieldEmail, fieldPassword, fieldRole, fieldCreatedAt, fieldUpdatedAt).
 		From(table).
-		PlaceholderFormat(sq.Dollar).
-		Where(sq.Eq{fieldID: id})
+		PlaceholderFormat(sq.Dollar)
+
+	// Добавить заданные фильтры поиска
+	if filter.ID != 0 {
+		builderQuery = builderQuery.Where(sq.Eq{fieldID: filter.ID})
+	}
+	if filter.Username != "" {
+		builderQuery = builderQuery.Where(sq.Eq{fieldName: filter.Username})
+	}
 
 	query, args, err := builderQuery.ToSql()
 	if err != nil {

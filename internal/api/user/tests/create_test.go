@@ -10,7 +10,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/algol-84/auth/internal/api/auth"
+	auth "github.com/algol-84/auth/internal/api/user"
 	"github.com/algol-84/auth/internal/model"
 	"github.com/algol-84/auth/internal/service"
 	serviceMocks "github.com/algol-84/auth/internal/service/mocks"
@@ -20,7 +20,7 @@ import (
 func TestCreate(t *testing.T) {
 	t.Parallel()
 	// mc - служебный объект minimock
-	type authServiceMockFunc func(mc *minimock.Controller) service.AuthService
+	type authServiceMockFunc func(mc *minimock.Controller) service.UserService
 
 	type args struct {
 		ctx context.Context
@@ -79,8 +79,8 @@ func TestCreate(t *testing.T) {
 			},
 			want: res,
 			err:  nil,
-			authServiceMock: func(mc *minimock.Controller) service.AuthService {
-				mock := serviceMocks.NewAuthServiceMock(mc)
+			authServiceMock: func(mc *minimock.Controller) service.UserService {
+				mock := serviceMocks.NewUserServiceMock(mc)
 				mock.CreateMock.Expect(ctx, user).Return(id, nil)
 				return mock
 			},
@@ -93,8 +93,8 @@ func TestCreate(t *testing.T) {
 			},
 			want: nil,
 			err:  serviceErr,
-			authServiceMock: func(mc *minimock.Controller) service.AuthService {
-				mock := serviceMocks.NewAuthServiceMock(mc)
+			authServiceMock: func(mc *minimock.Controller) service.UserService {
+				mock := serviceMocks.NewUserServiceMock(mc)
 				mock.CreateMock.Expect(ctx, user).Return(0, serviceErr)
 				return mock
 			},

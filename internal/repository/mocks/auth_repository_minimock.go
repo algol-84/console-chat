@@ -11,6 +11,7 @@ import (
 	mm_time "time"
 
 	model "github.com/algol-84/auth/internal/model"
+	mm_repository "github.com/algol-84/auth/internal/repository"
 	"github.com/gojuno/minimock/v3"
 )
 
@@ -33,9 +34,16 @@ type AuthRepositoryMock struct {
 	beforeDeleteCounter uint64
 	DeleteMock          mAuthRepositoryMockDelete
 
-	funcGet          func(ctx context.Context, id int64) (up1 *model.User, err error)
+	funcFind          func(ctx context.Context, username string, password string) (up1 *model.User, err error)
+	funcFindOrigin    string
+	inspectFuncFind   func(ctx context.Context, username string, password string)
+	afterFindCounter  uint64
+	beforeFindCounter uint64
+	FindMock          mAuthRepositoryMockFind
+
+	funcGet          func(ctx context.Context, filter *mm_repository.Filter) (up1 *model.User, err error)
 	funcGetOrigin    string
-	inspectFuncGet   func(ctx context.Context, id int64)
+	inspectFuncGet   func(ctx context.Context, filter *mm_repository.Filter)
 	afterGetCounter  uint64
 	beforeGetCounter uint64
 	GetMock          mAuthRepositoryMockGet
@@ -61,6 +69,9 @@ func NewAuthRepositoryMock(t minimock.Tester) *AuthRepositoryMock {
 
 	m.DeleteMock = mAuthRepositoryMockDelete{mock: m}
 	m.DeleteMock.callArgs = []*AuthRepositoryMockDeleteParams{}
+
+	m.FindMock = mAuthRepositoryMockFind{mock: m}
+	m.FindMock.callArgs = []*AuthRepositoryMockFindParams{}
 
 	m.GetMock = mAuthRepositoryMockGet{mock: m}
 	m.GetMock.callArgs = []*AuthRepositoryMockGetParams{}
@@ -758,6 +769,380 @@ func (m *AuthRepositoryMock) MinimockDeleteInspect() {
 	}
 }
 
+type mAuthRepositoryMockFind struct {
+	optional           bool
+	mock               *AuthRepositoryMock
+	defaultExpectation *AuthRepositoryMockFindExpectation
+	expectations       []*AuthRepositoryMockFindExpectation
+
+	callArgs []*AuthRepositoryMockFindParams
+	mutex    sync.RWMutex
+
+	expectedInvocations       uint64
+	expectedInvocationsOrigin string
+}
+
+// AuthRepositoryMockFindExpectation specifies expectation struct of the AuthRepository.Find
+type AuthRepositoryMockFindExpectation struct {
+	mock               *AuthRepositoryMock
+	params             *AuthRepositoryMockFindParams
+	paramPtrs          *AuthRepositoryMockFindParamPtrs
+	expectationOrigins AuthRepositoryMockFindExpectationOrigins
+	results            *AuthRepositoryMockFindResults
+	returnOrigin       string
+	Counter            uint64
+}
+
+// AuthRepositoryMockFindParams contains parameters of the AuthRepository.Find
+type AuthRepositoryMockFindParams struct {
+	ctx      context.Context
+	username string
+	password string
+}
+
+// AuthRepositoryMockFindParamPtrs contains pointers to parameters of the AuthRepository.Find
+type AuthRepositoryMockFindParamPtrs struct {
+	ctx      *context.Context
+	username *string
+	password *string
+}
+
+// AuthRepositoryMockFindResults contains results of the AuthRepository.Find
+type AuthRepositoryMockFindResults struct {
+	up1 *model.User
+	err error
+}
+
+// AuthRepositoryMockFindOrigins contains origins of expectations of the AuthRepository.Find
+type AuthRepositoryMockFindExpectationOrigins struct {
+	origin         string
+	originCtx      string
+	originUsername string
+	originPassword string
+}
+
+// Marks this method to be optional. The default behavior of any method with Return() is '1 or more', meaning
+// the test will fail minimock's automatic final call check if the mocked method was not called at least once.
+// Optional() makes method check to work in '0 or more' mode.
+// It is NOT RECOMMENDED to use this option unless you really need it, as default behaviour helps to
+// catch the problems when the expected method call is totally skipped during test run.
+func (mmFind *mAuthRepositoryMockFind) Optional() *mAuthRepositoryMockFind {
+	mmFind.optional = true
+	return mmFind
+}
+
+// Expect sets up expected params for AuthRepository.Find
+func (mmFind *mAuthRepositoryMockFind) Expect(ctx context.Context, username string, password string) *mAuthRepositoryMockFind {
+	if mmFind.mock.funcFind != nil {
+		mmFind.mock.t.Fatalf("AuthRepositoryMock.Find mock is already set by Set")
+	}
+
+	if mmFind.defaultExpectation == nil {
+		mmFind.defaultExpectation = &AuthRepositoryMockFindExpectation{}
+	}
+
+	if mmFind.defaultExpectation.paramPtrs != nil {
+		mmFind.mock.t.Fatalf("AuthRepositoryMock.Find mock is already set by ExpectParams functions")
+	}
+
+	mmFind.defaultExpectation.params = &AuthRepositoryMockFindParams{ctx, username, password}
+	mmFind.defaultExpectation.expectationOrigins.origin = minimock.CallerInfo(1)
+	for _, e := range mmFind.expectations {
+		if minimock.Equal(e.params, mmFind.defaultExpectation.params) {
+			mmFind.mock.t.Fatalf("Expectation set by When has same params: %#v", *mmFind.defaultExpectation.params)
+		}
+	}
+
+	return mmFind
+}
+
+// ExpectCtxParam1 sets up expected param ctx for AuthRepository.Find
+func (mmFind *mAuthRepositoryMockFind) ExpectCtxParam1(ctx context.Context) *mAuthRepositoryMockFind {
+	if mmFind.mock.funcFind != nil {
+		mmFind.mock.t.Fatalf("AuthRepositoryMock.Find mock is already set by Set")
+	}
+
+	if mmFind.defaultExpectation == nil {
+		mmFind.defaultExpectation = &AuthRepositoryMockFindExpectation{}
+	}
+
+	if mmFind.defaultExpectation.params != nil {
+		mmFind.mock.t.Fatalf("AuthRepositoryMock.Find mock is already set by Expect")
+	}
+
+	if mmFind.defaultExpectation.paramPtrs == nil {
+		mmFind.defaultExpectation.paramPtrs = &AuthRepositoryMockFindParamPtrs{}
+	}
+	mmFind.defaultExpectation.paramPtrs.ctx = &ctx
+	mmFind.defaultExpectation.expectationOrigins.originCtx = minimock.CallerInfo(1)
+
+	return mmFind
+}
+
+// ExpectUsernameParam2 sets up expected param username for AuthRepository.Find
+func (mmFind *mAuthRepositoryMockFind) ExpectUsernameParam2(username string) *mAuthRepositoryMockFind {
+	if mmFind.mock.funcFind != nil {
+		mmFind.mock.t.Fatalf("AuthRepositoryMock.Find mock is already set by Set")
+	}
+
+	if mmFind.defaultExpectation == nil {
+		mmFind.defaultExpectation = &AuthRepositoryMockFindExpectation{}
+	}
+
+	if mmFind.defaultExpectation.params != nil {
+		mmFind.mock.t.Fatalf("AuthRepositoryMock.Find mock is already set by Expect")
+	}
+
+	if mmFind.defaultExpectation.paramPtrs == nil {
+		mmFind.defaultExpectation.paramPtrs = &AuthRepositoryMockFindParamPtrs{}
+	}
+	mmFind.defaultExpectation.paramPtrs.username = &username
+	mmFind.defaultExpectation.expectationOrigins.originUsername = minimock.CallerInfo(1)
+
+	return mmFind
+}
+
+// ExpectPasswordParam3 sets up expected param password for AuthRepository.Find
+func (mmFind *mAuthRepositoryMockFind) ExpectPasswordParam3(password string) *mAuthRepositoryMockFind {
+	if mmFind.mock.funcFind != nil {
+		mmFind.mock.t.Fatalf("AuthRepositoryMock.Find mock is already set by Set")
+	}
+
+	if mmFind.defaultExpectation == nil {
+		mmFind.defaultExpectation = &AuthRepositoryMockFindExpectation{}
+	}
+
+	if mmFind.defaultExpectation.params != nil {
+		mmFind.mock.t.Fatalf("AuthRepositoryMock.Find mock is already set by Expect")
+	}
+
+	if mmFind.defaultExpectation.paramPtrs == nil {
+		mmFind.defaultExpectation.paramPtrs = &AuthRepositoryMockFindParamPtrs{}
+	}
+	mmFind.defaultExpectation.paramPtrs.password = &password
+	mmFind.defaultExpectation.expectationOrigins.originPassword = minimock.CallerInfo(1)
+
+	return mmFind
+}
+
+// Inspect accepts an inspector function that has same arguments as the AuthRepository.Find
+func (mmFind *mAuthRepositoryMockFind) Inspect(f func(ctx context.Context, username string, password string)) *mAuthRepositoryMockFind {
+	if mmFind.mock.inspectFuncFind != nil {
+		mmFind.mock.t.Fatalf("Inspect function is already set for AuthRepositoryMock.Find")
+	}
+
+	mmFind.mock.inspectFuncFind = f
+
+	return mmFind
+}
+
+// Return sets up results that will be returned by AuthRepository.Find
+func (mmFind *mAuthRepositoryMockFind) Return(up1 *model.User, err error) *AuthRepositoryMock {
+	if mmFind.mock.funcFind != nil {
+		mmFind.mock.t.Fatalf("AuthRepositoryMock.Find mock is already set by Set")
+	}
+
+	if mmFind.defaultExpectation == nil {
+		mmFind.defaultExpectation = &AuthRepositoryMockFindExpectation{mock: mmFind.mock}
+	}
+	mmFind.defaultExpectation.results = &AuthRepositoryMockFindResults{up1, err}
+	mmFind.defaultExpectation.returnOrigin = minimock.CallerInfo(1)
+	return mmFind.mock
+}
+
+// Set uses given function f to mock the AuthRepository.Find method
+func (mmFind *mAuthRepositoryMockFind) Set(f func(ctx context.Context, username string, password string) (up1 *model.User, err error)) *AuthRepositoryMock {
+	if mmFind.defaultExpectation != nil {
+		mmFind.mock.t.Fatalf("Default expectation is already set for the AuthRepository.Find method")
+	}
+
+	if len(mmFind.expectations) > 0 {
+		mmFind.mock.t.Fatalf("Some expectations are already set for the AuthRepository.Find method")
+	}
+
+	mmFind.mock.funcFind = f
+	mmFind.mock.funcFindOrigin = minimock.CallerInfo(1)
+	return mmFind.mock
+}
+
+// When sets expectation for the AuthRepository.Find which will trigger the result defined by the following
+// Then helper
+func (mmFind *mAuthRepositoryMockFind) When(ctx context.Context, username string, password string) *AuthRepositoryMockFindExpectation {
+	if mmFind.mock.funcFind != nil {
+		mmFind.mock.t.Fatalf("AuthRepositoryMock.Find mock is already set by Set")
+	}
+
+	expectation := &AuthRepositoryMockFindExpectation{
+		mock:               mmFind.mock,
+		params:             &AuthRepositoryMockFindParams{ctx, username, password},
+		expectationOrigins: AuthRepositoryMockFindExpectationOrigins{origin: minimock.CallerInfo(1)},
+	}
+	mmFind.expectations = append(mmFind.expectations, expectation)
+	return expectation
+}
+
+// Then sets up AuthRepository.Find return parameters for the expectation previously defined by the When method
+func (e *AuthRepositoryMockFindExpectation) Then(up1 *model.User, err error) *AuthRepositoryMock {
+	e.results = &AuthRepositoryMockFindResults{up1, err}
+	return e.mock
+}
+
+// Times sets number of times AuthRepository.Find should be invoked
+func (mmFind *mAuthRepositoryMockFind) Times(n uint64) *mAuthRepositoryMockFind {
+	if n == 0 {
+		mmFind.mock.t.Fatalf("Times of AuthRepositoryMock.Find mock can not be zero")
+	}
+	mm_atomic.StoreUint64(&mmFind.expectedInvocations, n)
+	mmFind.expectedInvocationsOrigin = minimock.CallerInfo(1)
+	return mmFind
+}
+
+func (mmFind *mAuthRepositoryMockFind) invocationsDone() bool {
+	if len(mmFind.expectations) == 0 && mmFind.defaultExpectation == nil && mmFind.mock.funcFind == nil {
+		return true
+	}
+
+	totalInvocations := mm_atomic.LoadUint64(&mmFind.mock.afterFindCounter)
+	expectedInvocations := mm_atomic.LoadUint64(&mmFind.expectedInvocations)
+
+	return totalInvocations > 0 && (expectedInvocations == 0 || expectedInvocations == totalInvocations)
+}
+
+// Find implements mm_repository.AuthRepository
+func (mmFind *AuthRepositoryMock) Find(ctx context.Context, username string, password string) (up1 *model.User, err error) {
+	mm_atomic.AddUint64(&mmFind.beforeFindCounter, 1)
+	defer mm_atomic.AddUint64(&mmFind.afterFindCounter, 1)
+
+	mmFind.t.Helper()
+
+	if mmFind.inspectFuncFind != nil {
+		mmFind.inspectFuncFind(ctx, username, password)
+	}
+
+	mm_params := AuthRepositoryMockFindParams{ctx, username, password}
+
+	// Record call args
+	mmFind.FindMock.mutex.Lock()
+	mmFind.FindMock.callArgs = append(mmFind.FindMock.callArgs, &mm_params)
+	mmFind.FindMock.mutex.Unlock()
+
+	for _, e := range mmFind.FindMock.expectations {
+		if minimock.Equal(*e.params, mm_params) {
+			mm_atomic.AddUint64(&e.Counter, 1)
+			return e.results.up1, e.results.err
+		}
+	}
+
+	if mmFind.FindMock.defaultExpectation != nil {
+		mm_atomic.AddUint64(&mmFind.FindMock.defaultExpectation.Counter, 1)
+		mm_want := mmFind.FindMock.defaultExpectation.params
+		mm_want_ptrs := mmFind.FindMock.defaultExpectation.paramPtrs
+
+		mm_got := AuthRepositoryMockFindParams{ctx, username, password}
+
+		if mm_want_ptrs != nil {
+
+			if mm_want_ptrs.ctx != nil && !minimock.Equal(*mm_want_ptrs.ctx, mm_got.ctx) {
+				mmFind.t.Errorf("AuthRepositoryMock.Find got unexpected parameter ctx, expected at\n%s:\nwant: %#v\n got: %#v%s\n",
+					mmFind.FindMock.defaultExpectation.expectationOrigins.originCtx, *mm_want_ptrs.ctx, mm_got.ctx, minimock.Diff(*mm_want_ptrs.ctx, mm_got.ctx))
+			}
+
+			if mm_want_ptrs.username != nil && !minimock.Equal(*mm_want_ptrs.username, mm_got.username) {
+				mmFind.t.Errorf("AuthRepositoryMock.Find got unexpected parameter username, expected at\n%s:\nwant: %#v\n got: %#v%s\n",
+					mmFind.FindMock.defaultExpectation.expectationOrigins.originUsername, *mm_want_ptrs.username, mm_got.username, minimock.Diff(*mm_want_ptrs.username, mm_got.username))
+			}
+
+			if mm_want_ptrs.password != nil && !minimock.Equal(*mm_want_ptrs.password, mm_got.password) {
+				mmFind.t.Errorf("AuthRepositoryMock.Find got unexpected parameter password, expected at\n%s:\nwant: %#v\n got: %#v%s\n",
+					mmFind.FindMock.defaultExpectation.expectationOrigins.originPassword, *mm_want_ptrs.password, mm_got.password, minimock.Diff(*mm_want_ptrs.password, mm_got.password))
+			}
+
+		} else if mm_want != nil && !minimock.Equal(*mm_want, mm_got) {
+			mmFind.t.Errorf("AuthRepositoryMock.Find got unexpected parameters, expected at\n%s:\nwant: %#v\n got: %#v%s\n",
+				mmFind.FindMock.defaultExpectation.expectationOrigins.origin, *mm_want, mm_got, minimock.Diff(*mm_want, mm_got))
+		}
+
+		mm_results := mmFind.FindMock.defaultExpectation.results
+		if mm_results == nil {
+			mmFind.t.Fatal("No results are set for the AuthRepositoryMock.Find")
+		}
+		return (*mm_results).up1, (*mm_results).err
+	}
+	if mmFind.funcFind != nil {
+		return mmFind.funcFind(ctx, username, password)
+	}
+	mmFind.t.Fatalf("Unexpected call to AuthRepositoryMock.Find. %v %v %v", ctx, username, password)
+	return
+}
+
+// FindAfterCounter returns a count of finished AuthRepositoryMock.Find invocations
+func (mmFind *AuthRepositoryMock) FindAfterCounter() uint64 {
+	return mm_atomic.LoadUint64(&mmFind.afterFindCounter)
+}
+
+// FindBeforeCounter returns a count of AuthRepositoryMock.Find invocations
+func (mmFind *AuthRepositoryMock) FindBeforeCounter() uint64 {
+	return mm_atomic.LoadUint64(&mmFind.beforeFindCounter)
+}
+
+// Calls returns a list of arguments used in each call to AuthRepositoryMock.Find.
+// The list is in the same order as the calls were made (i.e. recent calls have a higher index)
+func (mmFind *mAuthRepositoryMockFind) Calls() []*AuthRepositoryMockFindParams {
+	mmFind.mutex.RLock()
+
+	argCopy := make([]*AuthRepositoryMockFindParams, len(mmFind.callArgs))
+	copy(argCopy, mmFind.callArgs)
+
+	mmFind.mutex.RUnlock()
+
+	return argCopy
+}
+
+// MinimockFindDone returns true if the count of the Find invocations corresponds
+// the number of defined expectations
+func (m *AuthRepositoryMock) MinimockFindDone() bool {
+	if m.FindMock.optional {
+		// Optional methods provide '0 or more' call count restriction.
+		return true
+	}
+
+	for _, e := range m.FindMock.expectations {
+		if mm_atomic.LoadUint64(&e.Counter) < 1 {
+			return false
+		}
+	}
+
+	return m.FindMock.invocationsDone()
+}
+
+// MinimockFindInspect logs each unmet expectation
+func (m *AuthRepositoryMock) MinimockFindInspect() {
+	for _, e := range m.FindMock.expectations {
+		if mm_atomic.LoadUint64(&e.Counter) < 1 {
+			m.t.Errorf("Expected call to AuthRepositoryMock.Find at\n%s with params: %#v", e.expectationOrigins.origin, *e.params)
+		}
+	}
+
+	afterFindCounter := mm_atomic.LoadUint64(&m.afterFindCounter)
+	// if default expectation was set then invocations count should be greater than zero
+	if m.FindMock.defaultExpectation != nil && afterFindCounter < 1 {
+		if m.FindMock.defaultExpectation.params == nil {
+			m.t.Errorf("Expected call to AuthRepositoryMock.Find at\n%s", m.FindMock.defaultExpectation.returnOrigin)
+		} else {
+			m.t.Errorf("Expected call to AuthRepositoryMock.Find at\n%s with params: %#v", m.FindMock.defaultExpectation.expectationOrigins.origin, *m.FindMock.defaultExpectation.params)
+		}
+	}
+	// if func was set then invocations count should be greater than zero
+	if m.funcFind != nil && afterFindCounter < 1 {
+		m.t.Errorf("Expected call to AuthRepositoryMock.Find at\n%s", m.funcFindOrigin)
+	}
+
+	if !m.FindMock.invocationsDone() && afterFindCounter > 0 {
+		m.t.Errorf("Expected %d calls to AuthRepositoryMock.Find at\n%s but found %d calls",
+			mm_atomic.LoadUint64(&m.FindMock.expectedInvocations), m.FindMock.expectedInvocationsOrigin, afterFindCounter)
+	}
+}
+
 type mAuthRepositoryMockGet struct {
 	optional           bool
 	mock               *AuthRepositoryMock
@@ -784,14 +1169,14 @@ type AuthRepositoryMockGetExpectation struct {
 
 // AuthRepositoryMockGetParams contains parameters of the AuthRepository.Get
 type AuthRepositoryMockGetParams struct {
-	ctx context.Context
-	id  int64
+	ctx    context.Context
+	filter *mm_repository.Filter
 }
 
 // AuthRepositoryMockGetParamPtrs contains pointers to parameters of the AuthRepository.Get
 type AuthRepositoryMockGetParamPtrs struct {
-	ctx *context.Context
-	id  *int64
+	ctx    *context.Context
+	filter **mm_repository.Filter
 }
 
 // AuthRepositoryMockGetResults contains results of the AuthRepository.Get
@@ -802,9 +1187,9 @@ type AuthRepositoryMockGetResults struct {
 
 // AuthRepositoryMockGetOrigins contains origins of expectations of the AuthRepository.Get
 type AuthRepositoryMockGetExpectationOrigins struct {
-	origin    string
-	originCtx string
-	originId  string
+	origin       string
+	originCtx    string
+	originFilter string
 }
 
 // Marks this method to be optional. The default behavior of any method with Return() is '1 or more', meaning
@@ -818,7 +1203,7 @@ func (mmGet *mAuthRepositoryMockGet) Optional() *mAuthRepositoryMockGet {
 }
 
 // Expect sets up expected params for AuthRepository.Get
-func (mmGet *mAuthRepositoryMockGet) Expect(ctx context.Context, id int64) *mAuthRepositoryMockGet {
+func (mmGet *mAuthRepositoryMockGet) Expect(ctx context.Context, filter *mm_repository.Filter) *mAuthRepositoryMockGet {
 	if mmGet.mock.funcGet != nil {
 		mmGet.mock.t.Fatalf("AuthRepositoryMock.Get mock is already set by Set")
 	}
@@ -831,7 +1216,7 @@ func (mmGet *mAuthRepositoryMockGet) Expect(ctx context.Context, id int64) *mAut
 		mmGet.mock.t.Fatalf("AuthRepositoryMock.Get mock is already set by ExpectParams functions")
 	}
 
-	mmGet.defaultExpectation.params = &AuthRepositoryMockGetParams{ctx, id}
+	mmGet.defaultExpectation.params = &AuthRepositoryMockGetParams{ctx, filter}
 	mmGet.defaultExpectation.expectationOrigins.origin = minimock.CallerInfo(1)
 	for _, e := range mmGet.expectations {
 		if minimock.Equal(e.params, mmGet.defaultExpectation.params) {
@@ -865,8 +1250,8 @@ func (mmGet *mAuthRepositoryMockGet) ExpectCtxParam1(ctx context.Context) *mAuth
 	return mmGet
 }
 
-// ExpectIdParam2 sets up expected param id for AuthRepository.Get
-func (mmGet *mAuthRepositoryMockGet) ExpectIdParam2(id int64) *mAuthRepositoryMockGet {
+// ExpectFilterParam2 sets up expected param filter for AuthRepository.Get
+func (mmGet *mAuthRepositoryMockGet) ExpectFilterParam2(filter *mm_repository.Filter) *mAuthRepositoryMockGet {
 	if mmGet.mock.funcGet != nil {
 		mmGet.mock.t.Fatalf("AuthRepositoryMock.Get mock is already set by Set")
 	}
@@ -882,14 +1267,14 @@ func (mmGet *mAuthRepositoryMockGet) ExpectIdParam2(id int64) *mAuthRepositoryMo
 	if mmGet.defaultExpectation.paramPtrs == nil {
 		mmGet.defaultExpectation.paramPtrs = &AuthRepositoryMockGetParamPtrs{}
 	}
-	mmGet.defaultExpectation.paramPtrs.id = &id
-	mmGet.defaultExpectation.expectationOrigins.originId = minimock.CallerInfo(1)
+	mmGet.defaultExpectation.paramPtrs.filter = &filter
+	mmGet.defaultExpectation.expectationOrigins.originFilter = minimock.CallerInfo(1)
 
 	return mmGet
 }
 
 // Inspect accepts an inspector function that has same arguments as the AuthRepository.Get
-func (mmGet *mAuthRepositoryMockGet) Inspect(f func(ctx context.Context, id int64)) *mAuthRepositoryMockGet {
+func (mmGet *mAuthRepositoryMockGet) Inspect(f func(ctx context.Context, filter *mm_repository.Filter)) *mAuthRepositoryMockGet {
 	if mmGet.mock.inspectFuncGet != nil {
 		mmGet.mock.t.Fatalf("Inspect function is already set for AuthRepositoryMock.Get")
 	}
@@ -914,7 +1299,7 @@ func (mmGet *mAuthRepositoryMockGet) Return(up1 *model.User, err error) *AuthRep
 }
 
 // Set uses given function f to mock the AuthRepository.Get method
-func (mmGet *mAuthRepositoryMockGet) Set(f func(ctx context.Context, id int64) (up1 *model.User, err error)) *AuthRepositoryMock {
+func (mmGet *mAuthRepositoryMockGet) Set(f func(ctx context.Context, filter *mm_repository.Filter) (up1 *model.User, err error)) *AuthRepositoryMock {
 	if mmGet.defaultExpectation != nil {
 		mmGet.mock.t.Fatalf("Default expectation is already set for the AuthRepository.Get method")
 	}
@@ -930,14 +1315,14 @@ func (mmGet *mAuthRepositoryMockGet) Set(f func(ctx context.Context, id int64) (
 
 // When sets expectation for the AuthRepository.Get which will trigger the result defined by the following
 // Then helper
-func (mmGet *mAuthRepositoryMockGet) When(ctx context.Context, id int64) *AuthRepositoryMockGetExpectation {
+func (mmGet *mAuthRepositoryMockGet) When(ctx context.Context, filter *mm_repository.Filter) *AuthRepositoryMockGetExpectation {
 	if mmGet.mock.funcGet != nil {
 		mmGet.mock.t.Fatalf("AuthRepositoryMock.Get mock is already set by Set")
 	}
 
 	expectation := &AuthRepositoryMockGetExpectation{
 		mock:               mmGet.mock,
-		params:             &AuthRepositoryMockGetParams{ctx, id},
+		params:             &AuthRepositoryMockGetParams{ctx, filter},
 		expectationOrigins: AuthRepositoryMockGetExpectationOrigins{origin: minimock.CallerInfo(1)},
 	}
 	mmGet.expectations = append(mmGet.expectations, expectation)
@@ -972,17 +1357,17 @@ func (mmGet *mAuthRepositoryMockGet) invocationsDone() bool {
 }
 
 // Get implements mm_repository.AuthRepository
-func (mmGet *AuthRepositoryMock) Get(ctx context.Context, id int64) (up1 *model.User, err error) {
+func (mmGet *AuthRepositoryMock) Get(ctx context.Context, filter *mm_repository.Filter) (up1 *model.User, err error) {
 	mm_atomic.AddUint64(&mmGet.beforeGetCounter, 1)
 	defer mm_atomic.AddUint64(&mmGet.afterGetCounter, 1)
 
 	mmGet.t.Helper()
 
 	if mmGet.inspectFuncGet != nil {
-		mmGet.inspectFuncGet(ctx, id)
+		mmGet.inspectFuncGet(ctx, filter)
 	}
 
-	mm_params := AuthRepositoryMockGetParams{ctx, id}
+	mm_params := AuthRepositoryMockGetParams{ctx, filter}
 
 	// Record call args
 	mmGet.GetMock.mutex.Lock()
@@ -1001,7 +1386,7 @@ func (mmGet *AuthRepositoryMock) Get(ctx context.Context, id int64) (up1 *model.
 		mm_want := mmGet.GetMock.defaultExpectation.params
 		mm_want_ptrs := mmGet.GetMock.defaultExpectation.paramPtrs
 
-		mm_got := AuthRepositoryMockGetParams{ctx, id}
+		mm_got := AuthRepositoryMockGetParams{ctx, filter}
 
 		if mm_want_ptrs != nil {
 
@@ -1010,9 +1395,9 @@ func (mmGet *AuthRepositoryMock) Get(ctx context.Context, id int64) (up1 *model.
 					mmGet.GetMock.defaultExpectation.expectationOrigins.originCtx, *mm_want_ptrs.ctx, mm_got.ctx, minimock.Diff(*mm_want_ptrs.ctx, mm_got.ctx))
 			}
 
-			if mm_want_ptrs.id != nil && !minimock.Equal(*mm_want_ptrs.id, mm_got.id) {
-				mmGet.t.Errorf("AuthRepositoryMock.Get got unexpected parameter id, expected at\n%s:\nwant: %#v\n got: %#v%s\n",
-					mmGet.GetMock.defaultExpectation.expectationOrigins.originId, *mm_want_ptrs.id, mm_got.id, minimock.Diff(*mm_want_ptrs.id, mm_got.id))
+			if mm_want_ptrs.filter != nil && !minimock.Equal(*mm_want_ptrs.filter, mm_got.filter) {
+				mmGet.t.Errorf("AuthRepositoryMock.Get got unexpected parameter filter, expected at\n%s:\nwant: %#v\n got: %#v%s\n",
+					mmGet.GetMock.defaultExpectation.expectationOrigins.originFilter, *mm_want_ptrs.filter, mm_got.filter, minimock.Diff(*mm_want_ptrs.filter, mm_got.filter))
 			}
 
 		} else if mm_want != nil && !minimock.Equal(*mm_want, mm_got) {
@@ -1027,9 +1412,9 @@ func (mmGet *AuthRepositoryMock) Get(ctx context.Context, id int64) (up1 *model.
 		return (*mm_results).up1, (*mm_results).err
 	}
 	if mmGet.funcGet != nil {
-		return mmGet.funcGet(ctx, id)
+		return mmGet.funcGet(ctx, filter)
 	}
-	mmGet.t.Fatalf("Unexpected call to AuthRepositoryMock.Get. %v %v", ctx, id)
+	mmGet.t.Fatalf("Unexpected call to AuthRepositoryMock.Get. %v %v", ctx, filter)
 	return
 }
 
@@ -1451,6 +1836,8 @@ func (m *AuthRepositoryMock) MinimockFinish() {
 
 			m.MinimockDeleteInspect()
 
+			m.MinimockFindInspect()
+
 			m.MinimockGetInspect()
 
 			m.MinimockUpdateInspect()
@@ -1479,6 +1866,7 @@ func (m *AuthRepositoryMock) minimockDone() bool {
 	return done &&
 		m.MinimockCreateDone() &&
 		m.MinimockDeleteDone() &&
+		m.MinimockFindDone() &&
 		m.MinimockGetDone() &&
 		m.MinimockUpdateDone()
 }
