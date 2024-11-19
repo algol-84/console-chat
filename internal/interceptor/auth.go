@@ -21,8 +21,28 @@ const (
 	authServicePort = 50051
 )
 
+type authConn struct {
+	conn   *grpc.ClientConn
+	client descAccess.AccessV1Client
+}
+
+// NewAuthConnection создает коннект к Auth сервису
+func NewAuthConnection() (*authConn, error) {
+	conn, err := grpc.Dial(
+		fmt.Sprintf(":%d", authServicePort),
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
+	if err != nil {
+		return nil, errors.New("failed to dial auth service")
+	}
+
+	client := descAccess.NewAccessV1Client(conn)
+
+	return &authConn{conn: conn, client: client}, nil
+}
+
 // AuthInterceptor интерцептор дергает ручку Check сервиса Auth, рефреш токен передается в контексте
-func AuthInterceptor(ctx context.Context, req interface{}, _ *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+func (a *authConn) AuthInterceptor(ctx context.Context, req interface{}, _ *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
 		return nil, errors.New("metadata is not provided")
@@ -42,20 +62,11 @@ func AuthInterceptor(ctx context.Context, req interface{}, _ *grpc.UnaryServerIn
 	md = metadata.New(map[string]string{"Authorization": authHeader[0]})
 	ctxOut = metadata.NewOutgoingContext(ctxOut, md)
 
-	conn, err := grpc.Dial(
-		fmt.Sprintf(":%d", authServicePort),
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-	)
-	if err != nil {
-		return nil, errors.New("failed to dial auth service")
-	}
-
-	cl := descAccess.NewAccessV1Client(conn)
-	_, err = cl.Check(ctxOut, &descAccess.CheckRequest{
+	_, err := a.client.Check(ctxOut, &descAccess.CheckRequest{
 		EndpointAddress: authEndpoint[0],
 	})
 	if err != nil {
-		return nil, errors.New("failed to send check request to auth service")
+		return nil, fmt.Errorf("failed to send check request to auth service: %v", err)
 	}
 
 	return handler(ctx, req)

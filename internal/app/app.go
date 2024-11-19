@@ -127,15 +127,18 @@ func (a *App) initServiceProvider(_ context.Context) error {
 }
 
 func (a *App) initGRPCServer(ctx context.Context) error {
+	authConn, err := interceptor.NewAuthConnection()
+	if err != nil {
+		return err
+	}
+
 	a.grpcServer = grpc.NewServer(
 		grpc.Creds(insecure.NewCredentials()),
 		// Задаем интерцептор для grpc сервера
-		//	grpc.UnaryInterceptor(interceptor.ValidateInterceptor),
-		grpc.ChainUnaryInterceptor(interceptor.ValidateInterceptor, interceptor.AuthInterceptor),
+		grpc.ChainUnaryInterceptor(interceptor.ValidateInterceptor, authConn.AuthInterceptor),
 	)
 
 	reflection.Register(a.grpcServer)
-
 	desc.RegisterChatV1Server(a.grpcServer, a.serviceProvider.ChatImpl(ctx))
 
 	return nil
