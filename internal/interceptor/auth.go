@@ -22,7 +22,6 @@ const (
 )
 
 type authConn struct {
-	conn   *grpc.ClientConn
 	client descAccess.AccessV1Client
 }
 
@@ -38,7 +37,7 @@ func NewAuthConnection() (*authConn, error) {
 
 	client := descAccess.NewAccessV1Client(conn)
 
-	return &authConn{conn: conn, client: client}, nil
+	return &authConn{client: client}, nil
 }
 
 // AuthInterceptor интерцептор дергает ручку Check сервиса Auth, рефреш токен передается в контексте
