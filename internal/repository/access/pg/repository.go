@@ -9,7 +9,7 @@ import (
 )
 
 // Представление БД сервиса Access
-const table = "chat_permissions"
+const table = "user_permissions"
 const (
 	fieldEndpoint = "endpoint"
 	fieldRole     = "role"
