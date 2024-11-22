@@ -2,6 +2,7 @@ package metric
 
 import (
 	"context"
+	"log"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
@@ -12,6 +13,7 @@ const (
 	appName   = "auth_app"
 )
 
+// Metrics содержит все метрики приложения
 type Metrics struct {
 	requestCounter        prometheus.Counter
 	responseCounter       *prometheus.CounterVec
@@ -20,8 +22,9 @@ type Metrics struct {
 
 var metrics *Metrics
 
+// Init регистрирует метрики с помощью пакета promauto
 func Init(_ context.Context) error {
-	// Регистрация метрики с помощью пакета promauto
+	log.Println("registr")
 	metrics = &Metrics{
 		requestCounter: promauto.NewCounter(
 			prometheus.CounterOpts{
@@ -33,9 +36,9 @@ func Init(_ context.Context) error {
 		),
 		responseCounter: promauto.NewCounterVec(
 			prometheus.CounterOpts{
-				Namespace: namespace, // для информативности при поиске метрики в прометеусе
+				Namespace: namespace,
 				Subsystem: "grpc",
-				Name:      appName + "_responses_total", // total принято добавлять к счетчикам, к временным метрикам ед. измерения s/ms/us
+				Name:      appName + "_responses_total",
 				Help:      "Количество ответов от сервера",
 			},
 			[]string{"status", "method"},
@@ -55,14 +58,17 @@ func Init(_ context.Context) error {
 	return nil
 }
 
+// IncRequestCounter инкрементирует requestCounter
 func IncRequestCounter() {
 	metrics.requestCounter.Inc()
 }
 
+// IncResponseCounter инкрементирует responseCounter
 func IncResponseCounter(status string, method string) {
 	metrics.responseCounter.WithLabelValues(status, method).Inc()
 }
 
+// HistogramResponseTimeObserve обновляет гистограмму новым значением time
 func HistogramResponseTimeObserve(status string, time float64) {
 	metrics.histogramResponseTime.WithLabelValues(status).Observe(time)
 }
