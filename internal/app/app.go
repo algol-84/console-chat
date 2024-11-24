@@ -16,6 +16,7 @@ import (
 
 	"github.com/algol-84/chat-server/internal/config"
 	"github.com/algol-84/chat-server/internal/interceptor"
+	"github.com/algol-84/chat-server/internal/tracing"
 	desc "github.com/algol-84/chat-server/pkg/chat_v1"
 	_ "github.com/algol-84/chat-server/statik" // Используется для инициализации статического swagger-сервера
 	closer "github.com/algol-84/platform_common/pkg/closer"
@@ -25,6 +26,8 @@ import (
 )
 
 var configPath string
+
+const serviceName = "chat-service"
 
 func init() {
 	flag.StringVar(&configPath, "config-path", ".env", "path to config file")
@@ -135,8 +138,14 @@ func (a *App) initGRPCServer(ctx context.Context) error {
 	a.grpcServer = grpc.NewServer(
 		grpc.Creds(insecure.NewCredentials()),
 		// Задаем интерцептор для grpc сервера
-		grpc.ChainUnaryInterceptor(interceptor.ValidateInterceptor, authConn.AuthInterceptor),
+		// grpc.ChainUnaryInterceptor(interceptor.ValidateInterceptor, authConn.AuthInterceptor, interceptor.ServerTracingInterceptor),
+		grpc.ChainUnaryInterceptor(interceptor.ServerTracingInterceptor, authConn.AuthInterceptor),
 	)
+
+	err = tracing.Init(serviceName)
+	if err != nil {
+		return err
+	}
 
 	reflection.Register(a.grpcServer)
 	desc.RegisterChatV1Server(a.grpcServer, a.serviceProvider.ChatImpl(ctx))
