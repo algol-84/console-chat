@@ -20,12 +20,11 @@ var accessibleRole map[string]string
 
 // Check определяет уровень доступа пользователя
 func (s *service) Check(ctx context.Context, endpoint string) error {
-	log.Println("111")
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
 		return errors.New("metadata is not provided")
 	}
-	log.Println(md)
+
 	authHeader, ok := md["authorization"]
 	if !ok || len(authHeader) == 0 {
 		return errors.New("authorization header is not provided")
@@ -34,7 +33,6 @@ func (s *service) Check(ctx context.Context, endpoint string) error {
 	if !strings.HasPrefix(authHeader[0], authPrefix) {
 		return errors.New("invalid authorization header format")
 	}
-	log.Println(authHeader[0])
 	accessToken := strings.TrimPrefix(authHeader[0], authPrefix)
 
 	claims, err := utils.VerifyToken(accessToken, []byte(s.tokenConfig.AccessToken()))
@@ -43,13 +41,10 @@ func (s *service) Check(ctx context.Context, endpoint string) error {
 		return errors.New("access token is invalid")
 	}
 
-	log.Println("333")
 	accessibleMap, err := s.accessibleRoles(ctx)
 	if err != nil {
 		return errors.New("failed to get accessible roles")
 	}
-
-	log.Println(accessibleMap)
 
 	role, ok := accessibleMap[endpoint]
 	if !ok {
@@ -57,7 +52,6 @@ func (s *service) Check(ctx context.Context, endpoint string) error {
 		return errors.New("endpoint not found, access denied")
 	}
 
-	log.Println(role, claims.Role)
 	if role != claims.Role {
 		return errors.New("access denied")
 	}

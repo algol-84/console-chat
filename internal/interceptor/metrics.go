@@ -2,7 +2,6 @@ package interceptor
 
 import (
 	"context"
-	"log"
 	"time"
 
 	"google.golang.org/grpc"
@@ -17,7 +16,6 @@ func MetricsInterceptor(ctx context.Context, req interface{}, info *grpc.UnarySe
 	res, err := handler(ctx, req)
 	diffTime := time.Since(timeStart)
 
-	log.Println("Metrics Interceptor")
 	if err != nil {
 		metric.IncResponseCounter("error", info.FullMethod)
 		metric.HistogramResponseTimeObserve("error", diffTime.Seconds())

@@ -29,6 +29,7 @@ import (
 
 const (
 	prometheusAddr = "localhost:2112"
+	serviceName    = "auth-service"
 )
 
 var configPath string

@@ -2,7 +2,6 @@ package metric
 
 import (
 	"context"
-	"log"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
@@ -24,7 +23,6 @@ var metrics *Metrics
 
 // Init регистрирует метрики с помощью пакета promauto
 func Init(_ context.Context) error {
-	log.Println("registr")
 	metrics = &Metrics{
 		requestCounter: promauto.NewCounter(
 			prometheus.CounterOpts{
