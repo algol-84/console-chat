@@ -8,6 +8,11 @@ import (
 // Приватный глобальный объект логгера
 var globalLogger *zap.Logger
 
+// MockInit заглушка для тестов
+func MockInit() {
+	globalLogger = zap.NewNop()
+}
+
 // Init создает zap логгер
 func Init(core zapcore.Core, options ...zap.Option) {
 	globalLogger = zap.New(core, options...)
