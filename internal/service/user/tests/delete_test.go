@@ -9,6 +9,7 @@ import (
 	"github.com/gojuno/minimock/v3"
 	"github.com/stretchr/testify/require"
 
+	"github.com/algol-84/auth/internal/logger"
 	"github.com/algol-84/auth/internal/repository"
 	repoMocks "github.com/algol-84/auth/internal/repository/mocks"
 	auth "github.com/algol-84/auth/internal/service/user"
@@ -18,6 +19,8 @@ func TestDelete(t *testing.T) {
 	t.Parallel()
 	type authRepositoryMockFunc func(mc *minimock.Controller) repository.AuthRepository
 	type cacheRepositoryMockFunc func(mc *minimock.Controller) repository.CacheRepository
+
+	logger.MockInit()
 
 	type args struct {
 		ctx context.Context
