@@ -34,7 +34,8 @@ func TestCreate(t *testing.T) {
 
 	var (
 		ctx = context.Background()
-		mc  = minimock.NewController(t)
+
+		mc = minimock.NewController(t)
 
 		id         = gofakeit.Int64()
 		serviceErr = status.Errorf(codes.Internal, "user creation in DB returned with error")
@@ -73,7 +74,7 @@ func TestCreate(t *testing.T) {
 			err:  nil,
 			chatServiceMock: func(mc *minimock.Controller) service.ChatService {
 				mock := serviceMocks.NewChatServiceMock(mc)
-				mock.CreateMock.Expect(ctx, chat).Return(id, nil)
+				mock.CreateMock.Expect(minimock.AnyContext, chat).Return(id, nil)
 				return mock
 			},
 		},
@@ -87,7 +88,7 @@ func TestCreate(t *testing.T) {
 			err:  serviceErr,
 			chatServiceMock: func(mc *minimock.Controller) service.ChatService {
 				mock := serviceMocks.NewChatServiceMock(mc)
-				mock.CreateMock.Expect(ctx, chat).Return(0, serviceErr)
+				mock.CreateMock.Expect(minimock.AnyContext, chat).Return(0, serviceErr)
 				return mock
 			},
 		},
@@ -98,7 +99,12 @@ func TestCreate(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
+			// // Создаем новый спан и обновляем контекст
+			// span, ctx := opentracing.StartSpanFromContext(tt.args.ctx, "test create")
+			// defer span.Finish()
+
 			chatServiceMock := tt.chatServiceMock(mc)
+
 			api := chatApi.NewImplementation(chatServiceMock)
 
 			newID, err := api.Create(tt.args.ctx, tt.args.req)
