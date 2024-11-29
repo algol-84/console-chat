@@ -6,7 +6,10 @@ import (
 	"log"
 	"strings"
 
+	"github.com/algol-84/auth/internal/logger"
+	"github.com/algol-84/auth/internal/model"
 	"github.com/algol-84/auth/internal/utils"
+	"go.uber.org/zap"
 	"google.golang.org/grpc/metadata"
 )
 
@@ -22,38 +25,44 @@ var accessibleRole map[string]string
 func (s *service) Check(ctx context.Context, endpoint string) error {
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
-		return errors.New("metadata is not provided")
+		logger.Error("metadata is not provided")
+		return model.ErrorAccessDenied
 	}
 
 	authHeader, ok := md["authorization"]
 	if !ok || len(authHeader) == 0 {
-		return errors.New("authorization header is not provided")
+		logger.Error("authorization header is not provided")
+		return model.ErrorAccessDenied
 	}
 
 	if !strings.HasPrefix(authHeader[0], authPrefix) {
-		return errors.New("invalid authorization header format")
+		logger.Error("invalid authorization header format")
+		return model.ErrorAccessDenied
 	}
-
 	accessToken := strings.TrimPrefix(authHeader[0], authPrefix)
 
 	claims, err := utils.VerifyToken(accessToken, []byte(s.tokenConfig.AccessToken()))
 	if err != nil {
-		return errors.New("access token is invalid")
+		logger.Error("access token is invalid", zap.String("error", err.Error()))
+		return model.ErrorAccessDenied
 	}
 
 	accessibleMap, err := s.accessibleRoles(ctx)
 	if err != nil {
-		return errors.New("failed to get accessible roles")
+		logger.Error("failed to get accessible roles", zap.String("error", err.Error()))
+		return model.ErrorAccessDenied
 	}
 
 	role, ok := accessibleMap[endpoint]
 	if !ok {
 		// Если роль не найдена по умолчанию политика доступа - запретить все
-		return errors.New("endpoint not found, access denied")
+		logger.Error("endpoint not found, access denied")
+		return model.ErrorAccessDenied
 	}
 
 	if role != claims.Role {
-		return errors.New("access denied")
+		logger.Error("insufficient user role, access denied")
+		return model.ErrorAccessDenied
 	}
 
 	log.Printf("access granted for user %s to endpoint %s", claims.Username, endpoint)

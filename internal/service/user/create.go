@@ -4,14 +4,16 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 
+	"github.com/algol-84/auth/internal/logger"
 	"github.com/algol-84/auth/internal/model"
+	"go.uber.org/zap"
 )
 
 func (s *service) Create(ctx context.Context, user *model.User) (int64, error) {
 	id, err := s.authRepository.Create(ctx, user)
 	if err != nil {
+		logger.Error("failed to create user", zap.Int64("id", user.ID))
 		return 0, fmt.Errorf("repo error")
 	}
 
@@ -20,14 +22,14 @@ func (s *service) Create(ctx context.Context, user *model.User) (int64, error) {
 	// Сериализовать структуру с пользователем в JSON
 	data, err := json.Marshal(user)
 	if err != nil {
-		log.Printf("failed to marshal data: %v\n", err.Error())
+		logger.Error("failed to marshal data", zap.String("error", err.Error()))
 		return 0, err
 	}
 
 	// Отправить JSON с юзером в кафку
 	err = s.kafkaProducer.Produce(ctx, data)
 	if err != nil {
-		log.Printf("failed to produce log message to Kafka: %v\n", err.Error())
+		logger.Error("failed to produce log message to Kafka", zap.String("error", err.Error()))
 		return 0, err
 	}
 

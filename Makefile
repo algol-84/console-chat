@@ -80,3 +80,23 @@ test-coverage:
 	go tool cover -html=coverage.out;
 	go tool cover -func=./coverage.out | grep "total";
 	grep -sqFx "/coverage.out" .gitignore || echo "/coverage.out" >> .gitignore
+
+grpc-load-test:
+	$(LOCAL_BIN)/ghz \
+		--proto api/user_v1/user.proto \
+		--call user_v1.UserV1.Get \
+		--data '{"id": 1}' \
+		--rps 100 \
+		--total 3000 \
+		--insecure \
+		localhost:50051
+
+grpc-error-load-test:
+	$(LOCAL_BIN)/ghz \
+		--proto api/user_v1/user.proto \
+		--call user_v1.UserV1.Get \
+		--data '{"id": 0}' \
+		--rps 100 \
+		--total 3000 \
+		--insecure \
+		localhost:50051

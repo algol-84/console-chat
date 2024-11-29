@@ -9,6 +9,7 @@ import (
 	"github.com/gojuno/minimock/v3"
 	"github.com/stretchr/testify/require"
 
+	"github.com/algol-84/auth/internal/logger"
 	"github.com/algol-84/auth/internal/model"
 	"github.com/algol-84/auth/internal/repository"
 	repoMocks "github.com/algol-84/auth/internal/repository/mocks"
@@ -20,6 +21,8 @@ func TestGet(t *testing.T) {
 	// mc - служебный объект minimock
 	type authRepositoryMockFunc func(mc *minimock.Controller) repository.AuthRepository
 	type cacheRepositoryMockFunc func(mc *minimock.Controller) repository.CacheRepository
+
+	logger.MockInit()
 
 	type args struct {
 		ctx context.Context

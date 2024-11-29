@@ -11,6 +11,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	auth "github.com/algol-84/auth/internal/api/user"
+	"github.com/algol-84/auth/internal/logger"
 	"github.com/algol-84/auth/internal/model"
 	"github.com/algol-84/auth/internal/service"
 	serviceMocks "github.com/algol-84/auth/internal/service/mocks"
@@ -19,6 +20,9 @@ import (
 
 func TestCreate(t *testing.T) {
 	t.Parallel()
+
+	logger.MockInit()
+
 	// mc - служебный объект minimock
 	type authServiceMockFunc func(mc *minimock.Controller) service.UserService
 
@@ -107,6 +111,7 @@ func TestCreate(t *testing.T) {
 			t.Parallel()
 
 			authServiceMock := tt.authServiceMock(mc)
+
 			api := auth.NewImplementation(authServiceMock)
 
 			newID, err := api.Create(tt.args.ctx, tt.args.req)
