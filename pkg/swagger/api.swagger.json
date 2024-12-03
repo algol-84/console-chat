@@ -5,7 +5,7 @@
     "version": "1.0.0",
     "contact": {
       "name": "algol",
-      "email": "algol@mail.ru"
+      "email": "example@mail"
     }
   },
   "tags": [
@@ -25,6 +25,47 @@
     "application/json"
   ],
   "paths": {
+    "/chat/v1/connect": {
+      "post": {
+        "operationId": "ChatV1_ConnectChat",
+        "responses": {
+          "200": {
+            "description": "A successful response.(streaming responses)",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "result": {
+                  "$ref": "#/definitions/chat_v1Message"
+                },
+                "error": {
+                  "$ref": "#/definitions/rpcStatus"
+                }
+              },
+              "title": "Stream result of chat_v1Message"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/chat_v1ConnectRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ChatV1"
+        ]
+      }
+    },
     "/chat/v1/create": {
       "post": {
         "operationId": "ChatV1_Create",
@@ -48,7 +89,8 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/chat_v1CreateRequest"
+              "type": "object",
+              "properties": {}
             }
           }
         ],
@@ -124,24 +166,14 @@
     }
   },
   "definitions": {
-    "chat_v1Chat": {
+    "chat_v1ConnectRequest": {
       "type": "object",
       "properties": {
-        "usernames": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "title": "Список юзеров в чате"
-        }
-      },
-      "title": "Добавлена валидация строк в сообщении Chat"
-    },
-    "chat_v1CreateRequest": {
-      "type": "object",
-      "properties": {
-        "chat": {
-          "$ref": "#/definitions/chat_v1Chat"
+        "chatId": {
+          "type": "string"
+        },
+        "username": {
+          "type": "string"
         }
       }
     },
@@ -154,7 +186,7 @@
         }
       }
     },
-    "chat_v1SendMessageRequest": {
+    "chat_v1Message": {
       "type": "object",
       "properties": {
         "from": {
@@ -163,9 +195,20 @@
         "text": {
           "type": "string"
         },
-        "timestamp": {
+        "createdAt": {
           "type": "string",
           "format": "date-time"
+        }
+      }
+    },
+    "chat_v1SendMessageRequest": {
+      "type": "object",
+      "properties": {
+        "chatId": {
+          "type": "string"
+        },
+        "message": {
+          "$ref": "#/definitions/chat_v1Message"
         }
       }
     },

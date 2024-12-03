@@ -130,19 +130,20 @@ func (a *App) initServiceProvider(_ context.Context) error {
 }
 
 func (a *App) initGRPCServer(ctx context.Context) error {
-	authConn, err := interceptor.NewAuthConnection()
-	if err != nil {
-		return err
-	}
+	// authConn, err := interceptor.NewAuthConnection()
+	// if err != nil {
+	// 	return err
+	// }
 
 	a.grpcServer = grpc.NewServer(
 		grpc.Creds(insecure.NewCredentials()),
 		// Задаем интерцептор для grpc сервера
+		grpc.ChainUnaryInterceptor(interceptor.ValidateInterceptor),
 		// grpc.ChainUnaryInterceptor(interceptor.ValidateInterceptor, authConn.AuthInterceptor, interceptor.ServerTracingInterceptor),
-		grpc.ChainUnaryInterceptor(interceptor.ServerTracingInterceptor, authConn.AuthInterceptor),
+		//grpc.ChainUnaryInterceptor(interceptor.ServerTracingInterceptor, authConn.AuthInterceptor),
 	)
 
-	err = tracing.Init(serviceName)
+	err := tracing.Init(serviceName)
 	if err != nil {
 		return err
 	}

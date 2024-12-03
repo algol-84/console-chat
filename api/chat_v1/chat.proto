@@ -17,7 +17,7 @@ option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
     version: "1.0.0"
     contact: {
       name: "algol"
-      email: "algol@mail.ru"
+      email: "example@mail"
     };
   };
 
@@ -29,7 +29,7 @@ option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
 };
 
 service ChatV1 {
-  rpc Create(CreateRequest) returns (CreateResponse) {
+  rpc Create(google.protobuf.Empty) returns (CreateResponse) {
     // В опциях описываем метод http
     option (google.api.http) = {
       // указаваем метод http и путь до ручки
@@ -43,12 +43,24 @@ service ChatV1 {
       delete: "/chat/v1/delete"
     };
   }
+  rpc ConnectChat (ConnectRequest) returns (stream Message) {
+    option (google.api.http) = {
+      post: "/chat/v1/connect"
+      body: "*"
+    };
+  }
   rpc SendMessage(SendMessageRequest) returns (google.protobuf.Empty) {
     option (google.api.http) = {
       post: "/chat/v1/send-message"
       body: "*"
     };
   }
+}
+
+message Message {
+  string from = 1;
+  string text = 2;
+  google.protobuf.Timestamp created_at = 3;
 }
 
 // Добавлена валидация строк в сообщении Chat
@@ -66,10 +78,6 @@ message Chat {
   }];
 }
 
-message CreateRequest {
-  Chat chat = 1;
-}
-
 message CreateResponse {
   int64 id = 1;
 }
@@ -78,8 +86,12 @@ message DeleteRequest {
   int64 id = 1;
 }
 
+message ConnectRequest {
+  string chat_id = 1;
+  string username = 2;
+}
+
 message SendMessageRequest {
-  string from = 1;
-  string text = 2;
-  google.protobuf.Timestamp timestamp = 3;
+  string chat_id = 1;
+  Message message = 2;
 }

@@ -27,7 +27,7 @@ get-deps:
 generate:
 	@echo ">  Generate Chat API..."
 	make generate-chat-api
-	make generate-chat-ann
+	make generate-chat-opt
 	
 generate-chat-api:
 	mkdir -p pkg/chat_v1
@@ -47,8 +47,8 @@ generate-chat-opt:
 	--grpc-gateway_out=pkg/chat_v1 --grpc-gateway_opt=paths=source_relative \
 	--plugin=protoc-gen-grpc-gateway=bin/protoc-gen-grpc-gateway \
 	api/chat_v1/chat.proto
-# Конвертировать фронт swagger сервера в бинарник	
-	$(LOCAL_BIN)/statik -src=pkg/swagger/ -include='*.css,*.html,*.js,*.json,*.png'
+# Конвертировать фронтенд swagger-сервера в бинарник	
+	$(LOCAL_BIN)/statik -f -src=pkg/swagger/ -include='*.css,*.html,*.js,*.json,*.png'
 
 local-migration-status:
 	$(CURDIR)/bin/goose -dir ${LOCAL_MIGRATION_DIR} postgres ${LOCAL_MIGRATION_DSN} status -v

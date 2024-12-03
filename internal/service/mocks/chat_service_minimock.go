@@ -10,7 +10,6 @@ import (
 	mm_atomic "sync/atomic"
 	mm_time "time"
 
-	"github.com/algol-84/chat-server/internal/model"
 	"github.com/gojuno/minimock/v3"
 )
 
@@ -19,9 +18,9 @@ type ChatServiceMock struct {
 	t          minimock.Tester
 	finishOnce sync.Once
 
-	funcCreate          func(ctx context.Context, user *model.Chat) (i1 int64, err error)
+	funcCreate          func(ctx context.Context) (i1 int64, err error)
 	funcCreateOrigin    string
-	inspectFuncCreate   func(ctx context.Context, user *model.Chat)
+	inspectFuncCreate   func(ctx context.Context)
 	afterCreateCounter  uint64
 	beforeCreateCounter uint64
 	CreateMock          mChatServiceMockCreate
@@ -79,14 +78,12 @@ type ChatServiceMockCreateExpectation struct {
 
 // ChatServiceMockCreateParams contains parameters of the ChatService.Create
 type ChatServiceMockCreateParams struct {
-	ctx  context.Context
-	user *model.Chat
+	ctx context.Context
 }
 
 // ChatServiceMockCreateParamPtrs contains pointers to parameters of the ChatService.Create
 type ChatServiceMockCreateParamPtrs struct {
-	ctx  *context.Context
-	user **model.Chat
+	ctx *context.Context
 }
 
 // ChatServiceMockCreateResults contains results of the ChatService.Create
@@ -97,9 +94,8 @@ type ChatServiceMockCreateResults struct {
 
 // ChatServiceMockCreateOrigins contains origins of expectations of the ChatService.Create
 type ChatServiceMockCreateExpectationOrigins struct {
-	origin     string
-	originCtx  string
-	originUser string
+	origin    string
+	originCtx string
 }
 
 // Marks this method to be optional. The default behavior of any method with Return() is '1 or more', meaning
@@ -113,7 +109,7 @@ func (mmCreate *mChatServiceMockCreate) Optional() *mChatServiceMockCreate {
 }
 
 // Expect sets up expected params for ChatService.Create
-func (mmCreate *mChatServiceMockCreate) Expect(ctx context.Context, user *model.Chat) *mChatServiceMockCreate {
+func (mmCreate *mChatServiceMockCreate) Expect(ctx context.Context) *mChatServiceMockCreate {
 	if mmCreate.mock.funcCreate != nil {
 		mmCreate.mock.t.Fatalf("ChatServiceMock.Create mock is already set by Set")
 	}
@@ -126,7 +122,7 @@ func (mmCreate *mChatServiceMockCreate) Expect(ctx context.Context, user *model.
 		mmCreate.mock.t.Fatalf("ChatServiceMock.Create mock is already set by ExpectParams functions")
 	}
 
-	mmCreate.defaultExpectation.params = &ChatServiceMockCreateParams{ctx, user}
+	mmCreate.defaultExpectation.params = &ChatServiceMockCreateParams{ctx}
 	mmCreate.defaultExpectation.expectationOrigins.origin = minimock.CallerInfo(1)
 	for _, e := range mmCreate.expectations {
 		if minimock.Equal(e.params, mmCreate.defaultExpectation.params) {
@@ -160,31 +156,8 @@ func (mmCreate *mChatServiceMockCreate) ExpectCtxParam1(ctx context.Context) *mC
 	return mmCreate
 }
 
-// ExpectUserParam2 sets up expected param user for ChatService.Create
-func (mmCreate *mChatServiceMockCreate) ExpectUserParam2(user *model.Chat) *mChatServiceMockCreate {
-	if mmCreate.mock.funcCreate != nil {
-		mmCreate.mock.t.Fatalf("ChatServiceMock.Create mock is already set by Set")
-	}
-
-	if mmCreate.defaultExpectation == nil {
-		mmCreate.defaultExpectation = &ChatServiceMockCreateExpectation{}
-	}
-
-	if mmCreate.defaultExpectation.params != nil {
-		mmCreate.mock.t.Fatalf("ChatServiceMock.Create mock is already set by Expect")
-	}
-
-	if mmCreate.defaultExpectation.paramPtrs == nil {
-		mmCreate.defaultExpectation.paramPtrs = &ChatServiceMockCreateParamPtrs{}
-	}
-	mmCreate.defaultExpectation.paramPtrs.user = &user
-	mmCreate.defaultExpectation.expectationOrigins.originUser = minimock.CallerInfo(1)
-
-	return mmCreate
-}
-
 // Inspect accepts an inspector function that has same arguments as the ChatService.Create
-func (mmCreate *mChatServiceMockCreate) Inspect(f func(ctx context.Context, user *model.Chat)) *mChatServiceMockCreate {
+func (mmCreate *mChatServiceMockCreate) Inspect(f func(ctx context.Context)) *mChatServiceMockCreate {
 	if mmCreate.mock.inspectFuncCreate != nil {
 		mmCreate.mock.t.Fatalf("Inspect function is already set for ChatServiceMock.Create")
 	}
@@ -209,7 +182,7 @@ func (mmCreate *mChatServiceMockCreate) Return(i1 int64, err error) *ChatService
 }
 
 // Set uses given function f to mock the ChatService.Create method
-func (mmCreate *mChatServiceMockCreate) Set(f func(ctx context.Context, user *model.Chat) (i1 int64, err error)) *ChatServiceMock {
+func (mmCreate *mChatServiceMockCreate) Set(f func(ctx context.Context) (i1 int64, err error)) *ChatServiceMock {
 	if mmCreate.defaultExpectation != nil {
 		mmCreate.mock.t.Fatalf("Default expectation is already set for the ChatService.Create method")
 	}
@@ -225,14 +198,14 @@ func (mmCreate *mChatServiceMockCreate) Set(f func(ctx context.Context, user *mo
 
 // When sets expectation for the ChatService.Create which will trigger the result defined by the following
 // Then helper
-func (mmCreate *mChatServiceMockCreate) When(ctx context.Context, user *model.Chat) *ChatServiceMockCreateExpectation {
+func (mmCreate *mChatServiceMockCreate) When(ctx context.Context) *ChatServiceMockCreateExpectation {
 	if mmCreate.mock.funcCreate != nil {
 		mmCreate.mock.t.Fatalf("ChatServiceMock.Create mock is already set by Set")
 	}
 
 	expectation := &ChatServiceMockCreateExpectation{
 		mock:               mmCreate.mock,
-		params:             &ChatServiceMockCreateParams{ctx, user},
+		params:             &ChatServiceMockCreateParams{ctx},
 		expectationOrigins: ChatServiceMockCreateExpectationOrigins{origin: minimock.CallerInfo(1)},
 	}
 	mmCreate.expectations = append(mmCreate.expectations, expectation)
@@ -267,17 +240,17 @@ func (mmCreate *mChatServiceMockCreate) invocationsDone() bool {
 }
 
 // Create implements mm_service.ChatService
-func (mmCreate *ChatServiceMock) Create(ctx context.Context, user *model.Chat) (i1 int64, err error) {
+func (mmCreate *ChatServiceMock) Create(ctx context.Context) (i1 int64, err error) {
 	mm_atomic.AddUint64(&mmCreate.beforeCreateCounter, 1)
 	defer mm_atomic.AddUint64(&mmCreate.afterCreateCounter, 1)
 
 	mmCreate.t.Helper()
 
 	if mmCreate.inspectFuncCreate != nil {
-		mmCreate.inspectFuncCreate(ctx, user)
+		mmCreate.inspectFuncCreate(ctx)
 	}
 
-	mm_params := ChatServiceMockCreateParams{ctx, user}
+	mm_params := ChatServiceMockCreateParams{ctx}
 
 	// Record call args
 	mmCreate.CreateMock.mutex.Lock()
@@ -296,18 +269,13 @@ func (mmCreate *ChatServiceMock) Create(ctx context.Context, user *model.Chat) (
 		mm_want := mmCreate.CreateMock.defaultExpectation.params
 		mm_want_ptrs := mmCreate.CreateMock.defaultExpectation.paramPtrs
 
-		mm_got := ChatServiceMockCreateParams{ctx, user}
+		mm_got := ChatServiceMockCreateParams{ctx}
 
 		if mm_want_ptrs != nil {
 
 			if mm_want_ptrs.ctx != nil && !minimock.Equal(*mm_want_ptrs.ctx, mm_got.ctx) {
 				mmCreate.t.Errorf("ChatServiceMock.Create got unexpected parameter ctx, expected at\n%s:\nwant: %#v\n got: %#v%s\n",
 					mmCreate.CreateMock.defaultExpectation.expectationOrigins.originCtx, *mm_want_ptrs.ctx, mm_got.ctx, minimock.Diff(*mm_want_ptrs.ctx, mm_got.ctx))
-			}
-
-			if mm_want_ptrs.user != nil && !minimock.Equal(*mm_want_ptrs.user, mm_got.user) {
-				mmCreate.t.Errorf("ChatServiceMock.Create got unexpected parameter user, expected at\n%s:\nwant: %#v\n got: %#v%s\n",
-					mmCreate.CreateMock.defaultExpectation.expectationOrigins.originUser, *mm_want_ptrs.user, mm_got.user, minimock.Diff(*mm_want_ptrs.user, mm_got.user))
 			}
 
 		} else if mm_want != nil && !minimock.Equal(*mm_want, mm_got) {
@@ -322,9 +290,9 @@ func (mmCreate *ChatServiceMock) Create(ctx context.Context, user *model.Chat) (
 		return (*mm_results).i1, (*mm_results).err
 	}
 	if mmCreate.funcCreate != nil {
-		return mmCreate.funcCreate(ctx, user)
+		return mmCreate.funcCreate(ctx)
 	}
-	mmCreate.t.Fatalf("Unexpected call to ChatServiceMock.Create. %v %v", ctx, user)
+	mmCreate.t.Fatalf("Unexpected call to ChatServiceMock.Create. %v", ctx)
 	return
 }
 

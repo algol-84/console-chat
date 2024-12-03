@@ -9,11 +9,13 @@ import (
 type Implementation struct {
 	desc.UnimplementedChatV1Server
 	chatService service.ChatService
+	channels    map[string]chan *desc.Message
 }
 
 // NewImplementation конструктор API слоя
 func NewImplementation(chatService service.ChatService) *Implementation {
 	return &Implementation{
 		chatService: chatService,
+		channels: make(map[string]chan *desc.Message),
 	}
 }
