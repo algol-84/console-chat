@@ -57,7 +57,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/chat_v1ConnectRequest"
+              "$ref": "#/definitions/chat_v1ConnectChatRequest"
             }
           }
         ],
@@ -68,12 +68,12 @@
     },
     "/chat/v1/create": {
       "post": {
-        "operationId": "ChatV1_Create",
+        "operationId": "ChatV1_CreateChat",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/chat_v1CreateResponse"
+              "$ref": "#/definitions/chat_v1CreateChatResponse"
             }
           },
           "default": {
@@ -101,7 +101,7 @@
     },
     "/chat/v1/delete": {
       "delete": {
-        "operationId": "ChatV1_Delete",
+        "operationId": "ChatV1_DeleteChat",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -122,8 +122,7 @@
             "name": "id",
             "in": "query",
             "required": false,
-            "type": "string",
-            "format": "int64"
+            "type": "string"
           }
         ],
         "tags": [
@@ -166,7 +165,7 @@
     }
   },
   "definitions": {
-    "chat_v1ConnectRequest": {
+    "chat_v1ConnectChatRequest": {
       "type": "object",
       "properties": {
         "chatId": {
@@ -177,12 +176,11 @@
         }
       }
     },
-    "chat_v1CreateResponse": {
+    "chat_v1CreateChatResponse": {
       "type": "object",
       "properties": {
         "id": {
-          "type": "string",
-          "format": "int64"
+          "type": "string"
         }
       }
     },

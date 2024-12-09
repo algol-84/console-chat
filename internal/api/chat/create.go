@@ -1,4 +1,4 @@
-package auth
+package chat
 
 import (
 	"context"
@@ -10,21 +10,17 @@ import (
 	"github.com/google/uuid"
 )
 
-// Create обрабатывает GRPC запросы на создание нового чата
-func (i *Implementation) Create(ctx context.Context, _ *emptypb.Empty) (*desc.CreateResponse, error) {
-	// span, _ := opentracing.StartSpanFromContext(ctx, "create api")
-	// defer span.Finish()
-
+// CreateChat обрабатывает GRPC запросы на создание нового чата
+func (i *Implementation) CreateChat(_ context.Context, _ *emptypb.Empty) (*desc.CreateChatResponse, error) {
 	chatID, err := uuid.NewUUID()
 	if err != nil {
 		return nil, err
 	}
 
-	log.Println(chatID.ID(), chatID.String())
-
 	i.channels[chatID.String()] = make(chan *desc.Message, 100)
+	log.Printf("chat created with id: %s", chatID)
 
-	return &desc.CreateResponse{
-		Id: 1, //chatID.String(),
+	return &desc.CreateChatResponse{
+		Id: chatID.String(),
 	}, nil
 }

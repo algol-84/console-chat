@@ -29,7 +29,7 @@ option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
 };
 
 service ChatV1 {
-  rpc Create(google.protobuf.Empty) returns (CreateResponse) {
+  rpc CreateChat(google.protobuf.Empty) returns (CreateChatResponse) {
     // В опциях описываем метод http
     option (google.api.http) = {
       // указаваем метод http и путь до ручки
@@ -38,12 +38,12 @@ service ChatV1 {
       body: "*"
     };  
   }
-  rpc Delete(DeleteRequest) returns (google.protobuf.Empty) {
+  rpc DeleteChat(DeleteChatRequest) returns (google.protobuf.Empty) {
     option (google.api.http) = {
       delete: "/chat/v1/delete"
     };
   }
-  rpc ConnectChat (ConnectRequest) returns (stream Message) {
+  rpc ConnectChat (ConnectChatRequest) returns (stream Message) {
     option (google.api.http) = {
       post: "/chat/v1/connect"
       body: "*"
@@ -63,32 +63,17 @@ message Message {
   google.protobuf.Timestamp created_at = 3;
 }
 
-// Добавлена валидация строк в сообщении Chat
-message Chat {
-  // Список юзеров в чате
-  repeated string usernames = 1  [(validate.rules).repeated = {
-    min_items: 1, // Минимальное количество элементов
-    unique: true,  // Уникальность элементов
-    items: {
-      string: { // Правила для каждого элемента
-        min_len: 1, // Минимальная длина строки
-        max_len: 50 // Максимальная длина строки
-      }
-    }
-  }];
+message CreateChatResponse {
+  string id = 1;
 }
 
-message CreateResponse {
-  int64 id = 1;
+message DeleteChatRequest {
+  string id = 1;
 }
 
-message DeleteRequest {
-  int64 id = 1;
-}
-
-message ConnectRequest {
+message ConnectChatRequest {
   string chat_id = 1;
-  string username = 2;
+  string username = 2 [(validate.rules).string.min_len = 1, (validate.rules).string.max_len = 25];
 }
 
 message SendMessageRequest {

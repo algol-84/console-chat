@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -45,6 +46,9 @@ func NewAuthConnection() (*authConn, error) {
 
 // AuthInterceptor интерцептор дергает ручку Check сервиса Auth, рефреш токен передается в контексте
 func (a *authConn) AuthInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+
+	log.Println("auth interceptor")
+
 	span, ctx := opentracing.StartSpanFromContext(ctx, info.FullMethod)
 	defer span.Finish()
 
@@ -63,24 +67,34 @@ func (a *authConn) AuthInterceptor(ctx context.Context, req interface{}, info *g
 		return nil, errors.New("endpoint is not provided")
 	}
 
-	//В контексте лежит ключ авторизации
-	if ok && len(authHeader) > 0 {
-		authEndpoint, ok := md["endpoint"]
-		if !ok || len(authEndpoint) == 0 {
-			return nil, errors.New("endpoint is not provided")
-		}
-
-		ctxOut := context.Background()
-		md = metadata.New(map[string]string{"Authorization": authHeader[0]})
-		ctxOut = metadata.NewOutgoingContext(ctxOut, md)
-
-		_, err := a.client.Check(ctxOut, &descAccess.CheckRequest{
-			EndpointAddress: authEndpoint[0],
-		})
-		if err != nil {
-			return nil, fmt.Errorf("failed to send check request to auth service: %v", err)
-		}
+	ctxOut := context.Background()
+	md = metadata.New(map[string]string{"Authorization": authHeader[0]})
+	ctxOut = metadata.NewOutgoingContext(ctxOut, md)
+	_, err := a.client.Check(ctxOut, &descAccess.CheckRequest{
+		EndpointAddress: authEndpoint[0],
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to send check request to auth service: %v", err)
 	}
+
+	// //В контексте лежит ключ авторизации
+	// if ok && len(authHeader) > 0 {
+	// 	authEndpoint, ok := md["endpoint"]
+	// 	if !ok || len(authEndpoint) == 0 {
+	// 		return nil, errors.New("endpoint is not provided")
+	// 	}
+
+	// 	ctxOut := context.Background()
+	// 	md = metadata.New(map[string]string{"Authorization": authHeader[0]})
+	// 	ctxOut = metadata.NewOutgoingContext(ctxOut, md)
+
+	// 	_, err := a.client.Check(ctxOut, &descAccess.CheckRequest{
+	// 		EndpointAddress: authEndpoint[0],
+	// 	})
+	// 	if err != nil {
+	// 		return nil, fmt.Errorf("failed to send check request to auth service: %v", err)
+	// 	}
+	// }
 
 	return handler(ctx, req)
 }
