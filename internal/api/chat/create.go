@@ -1,27 +1,26 @@
-package auth
+package chat
 
 import (
 	"context"
+	"log"
 
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/emptypb"
 
-	conv "github.com/algol-84/chat-server/internal/converter"
 	desc "github.com/algol-84/chat-server/pkg/chat_v1"
-	"github.com/opentracing/opentracing-go"
+	"github.com/google/uuid"
 )
 
-// Create обрабатывает GRPC запросы на создание нового юзера
-func (i *Implementation) Create(ctx context.Context, req *desc.CreateRequest) (*desc.CreateResponse, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "create api")
-	defer span.Finish()
-
-	userID, err := i.chatService.Create(ctx, conv.FromChatToService(req.Chat))
+// CreateChat обрабатывает GRPC запросы на создание нового чата
+func (i *Implementation) CreateChat(_ context.Context, _ *emptypb.Empty) (*desc.CreateChatResponse, error) {
+	chatID, err := uuid.NewUUID()
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "user creation in DB returned with error")
+		return nil, err
 	}
 
-	return &desc.CreateResponse{
-		Id: userID,
+	i.channels[chatID.String()] = make(chan *desc.Message, 100)
+	log.Printf("chat created with id: %s", chatID)
+
+	return &desc.CreateChatResponse{
+		Id: chatID.String(),
 	}, nil
 }

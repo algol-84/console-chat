@@ -1,6 +1,6 @@
 .idea
-.vscode
-*.code-workspace
-bin
+bin/*
+chat-cli/bin/*
+!chat-cli/bin/.env
 coverage.out
 vendor.protogen
