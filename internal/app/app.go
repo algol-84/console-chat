@@ -139,8 +139,6 @@ func (a *App) initGRPCServer(ctx context.Context) error {
 		grpc.Creds(insecure.NewCredentials()),
 		// Задаем интерцептор для grpc сервера
 		grpc.ChainUnaryInterceptor(interceptor.ValidateInterceptor, authConn.AuthInterceptor),
-		// grpc.ChainUnaryInterceptor(interceptor.ValidateInterceptor, authConn.AuthInterceptor, interceptor.ServerTracingInterceptor),
-		//grpc.ChainUnaryInterceptor(interceptor.ServerTracingInterceptor, authConn.AuthInterceptor),
 	)
 
 	err = tracing.Init(serviceName)

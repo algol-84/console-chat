@@ -17,30 +17,24 @@ import (
 
 	desc "github.com/algol-84/chat-cli/pkg/chat_v1"
 	"github.com/fatih/color"
-	//"github.com/brianvoe/gofakeit"
-)
-
-const (
-	chatHost = "127.0.0.1"
-	chatPort = 50052
 )
 
 type ChatImpl struct {
 	chatClient desc.ChatV1Client
 }
 
-func NewChatService() *ChatImpl {
+func NewChatClient(address string) (*ChatImpl, error) {
 	conn, err := grpc.Dial(
-		fmt.Sprintf("%s:%d", chatHost, chatPort),
+		address,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
 	if err != nil {
-		log.Fatalf("failed to dial GRPC client: %v", err)
+		return nil, fmt.Errorf("failed to dial GRPC client: %v", err)
 	}
 
 	chatClient := desc.NewChatV1Client(conn)
 
-	return &ChatImpl{chatClient: chatClient}
+	return &ChatImpl{chatClient: chatClient}, nil
 }
 
 // Create new chat and return UUID

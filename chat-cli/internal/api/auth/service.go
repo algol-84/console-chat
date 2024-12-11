@@ -15,13 +15,14 @@ type AuthImpl struct {
 	authClient descAuth.AuthV1Client
 }
 
-func NewAuthClient() *AuthImpl {
+func NewAuthClient(address string) (*AuthImpl, error) {
+	log.Println("NewAuthClient")
 	conn, err := grpc.Dial(
-		fmt.Sprintf("%s:%d", authHost, authPort),
+		address,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
 	if err != nil {
-		log.Fatalf("failed to dial GRPC client: %v", err)
+		return nil, fmt.Errorf("failed to dial GRPC client: %v", err)
 	}
 
 	userClient := user.NewUserV1Client(conn)
@@ -30,5 +31,5 @@ func NewAuthClient() *AuthImpl {
 	return &AuthImpl{
 		userClient: userClient,
 		authClient: authClient,
-	}
+	}, nil
 }
