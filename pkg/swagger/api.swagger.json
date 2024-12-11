@@ -188,14 +188,17 @@
       "type": "object",
       "properties": {
         "from": {
-          "type": "string"
+          "type": "string",
+          "title": "Имя пользователя-отправителя сообщения"
         },
         "text": {
-          "type": "string"
+          "type": "string",
+          "title": "Текст сообщения"
         },
         "createdAt": {
           "type": "string",
-          "format": "date-time"
+          "format": "date-time",
+          "title": "Время отправки"
         }
       }
     },

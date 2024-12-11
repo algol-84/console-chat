@@ -47,7 +47,11 @@ generate-chat-opt:
 	--grpc-gateway_out=pkg/chat_v1 --grpc-gateway_opt=paths=source_relative \
 	--plugin=protoc-gen-grpc-gateway=bin/protoc-gen-grpc-gateway \
 	api/chat_v1/chat.proto
+<<<<<<< HEAD
 # Конвертировать фронтенд swagger-сервера в бинарник	
+=======
+# Конвертировать фронт swagger сервера в бинарник	
+>>>>>>> main
 	$(LOCAL_BIN)/statik -f -src=pkg/swagger/ -include='*.css,*.html,*.js,*.json,*.png'
 
 local-migration-status:
