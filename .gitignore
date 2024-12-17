@@ -1,4 +1,5 @@
 .idea
+/bin/*
 chat-client/bin/*
 !chat-client/bin/.env
 coverage.out
