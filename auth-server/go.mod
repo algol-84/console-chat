@@ -2,31 +2,30 @@ module github.com/algol-84/auth
 
 go 1.23
 
+replace github.com/algol-84/platform_common => ../platform_common
+
 require (
 	github.com/IBM/sarama v1.43.3
 	github.com/Masterminds/squirrel v1.5.4
-	github.com/algol-84/platform_common v1.0.1
 	github.com/brianvoe/gofakeit/v6 v6.28.0
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/gojuno/minimock/v3 v3.4.1
 	github.com/golang/protobuf v1.5.3
 	github.com/gomodule/redigo v1.9.2
-	github.com/grpc-ecosystem/grpc-opentracing v0.0.0-20180507213350-8e809c8a8645
 	github.com/joho/godotenv v1.5.1
 	github.com/natefinch/lumberjack v2.0.0+incompatible
-	github.com/opentracing/opentracing-go v1.2.0
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.20.5
 	github.com/stretchr/testify v1.9.0
-	github.com/uber/jaeger-client-go v2.30.0+incompatible
 	go.uber.org/zap v1.13.0
 	golang.org/x/crypto v0.26.0
 	google.golang.org/grpc v1.67.1
 	google.golang.org/protobuf v1.34.2
 )
 
+require github.com/algol-84/platform_common v0.0.0-00010101000000-000000000000
+
 require (
-	github.com/HdrHistogram/hdrhistogram-go v1.1.2 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
@@ -63,7 +62,6 @@ require (
 	github.com/prometheus/procfs v0.15.1 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
 	github.com/rogpeppe/go-internal v1.13.1 // indirect
-	github.com/uber/jaeger-lib v2.4.1+incompatible // indirect
 	go.uber.org/atomic v1.6.0 // indirect
 	go.uber.org/multierr v1.5.0 // indirect
 	golang.org/x/lint v0.0.0-20190930215403-16217165b5de // indirect

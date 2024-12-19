@@ -2,8 +2,10 @@ module github.com/algol-84/chat-server
 
 go 1.23.1
 
+replace github.com/algol-84/platform_common => ../platform_common
+
 require (
-	github.com/algol-84/platform_common v1.0.1
+	github.com/algol-84/platform_common v0.0.0-00010101000000-000000000000
 	github.com/envoyproxy/protoc-gen-validate v1.1.0
 	github.com/gojuno/minimock/v3 v3.4.1
 	github.com/golang/protobuf v1.5.4
