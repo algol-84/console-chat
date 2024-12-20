@@ -1,5 +1,7 @@
 # console-chat
 
+![Chat Architecture](chat-schema.png) { width=800 }
+
 ### HowTo run project
 Before starting the authorization server, you must start all docker containers
 ```
