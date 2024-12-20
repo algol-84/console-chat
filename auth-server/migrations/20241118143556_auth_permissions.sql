@@ -5,10 +5,9 @@ CREATE TABLE user_permissions (
 );
 
 INSERT INTO user_permissions (endpoint, role) VALUES 
-('/user_v1.UserV1/Create', 'ADMIN'),
-('/user_v1.UserV1/Get', 'USER'),
-('/user_v1.UserV1/Update', 'ADMIN'),
-('/user_v1.UserV1/Delete', 'ADMIN');
+('/chat_v1.ChatV1/CreateChat', 'ADMIN'),
+('/chat_v1.ChatV1/ConnectChat', 'USER'),
+('/chat_v1.ChatV1/SendMessage', 'USER');  
 
 -- +goose Down
 DROP TABLE user_permissions;

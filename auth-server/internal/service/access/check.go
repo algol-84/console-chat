@@ -60,7 +60,7 @@ func (s *service) Check(ctx context.Context, endpoint string) error {
 		return model.ErrorAccessDenied
 	}
 
-	if role != claims.Role {
+	if claims.Role != "ADMIN" && role != claims.Role {
 		logger.Error("insufficient user role, access denied")
 		return model.ErrorAccessDenied
 	}

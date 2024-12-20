@@ -33,8 +33,8 @@ var cl *ClientProvider
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "chat-client-app",
-	Short: "chat client cli util",
+	Use:   "chat-client",
+	Short: "This is chat client utility",
 }
 
 var createCmd = &cobra.Command{

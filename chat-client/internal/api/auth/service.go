@@ -2,7 +2,6 @@ package auth
 
 import (
 	"fmt"
-	"log"
 
 	descAuth "github.com/algol-84/chat-cli/pkg/auth_v1"
 	user "github.com/algol-84/chat-cli/pkg/user_v1"
@@ -16,7 +15,6 @@ type AuthImpl struct {
 }
 
 func NewAuthClient(address string) (*AuthImpl, error) {
-	log.Println("NewAuthClient")
 	conn, err := grpc.Dial(
 		address,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
