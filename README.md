@@ -1,6 +1,8 @@
-# console-chat
+# Сonsole-chat
+This is my homework for Oleg Kozyrev’s course “Microservices in BigTech”
 
-![Chat Architecture](chat-schema.png) { width=800 }
+### Chat Architecture
+![Chat Architecture](chat-schema.png)
 
 ### HowTo run project
 Before starting the authorization server, you must start all docker containers
